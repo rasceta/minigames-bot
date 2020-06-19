@@ -68,7 +68,7 @@ async def apollo_free_coins():
 async def apollo_free_coins_before():
     await client.wait_until_ready()
 
-@tasks.loop(minutes=5)
+@tasks.loop(minutes=3)
 async def apollo_card_games():
     conn = await get_conn()
     cursor = conn.cursor()
@@ -403,7 +403,7 @@ async def add_coins(ctx, member : discord.User, coins : int):
 
 @add_coins.error
 async def add_coins_eror(ctx,error):
-    if error == "Role 'Game Master' is required to run this command.":
+    if isinstance(error, commands.MissingRole):
         await ctx.send(error)
     else:
         await ctx.send(f"```Sorry, You need to define @Member you want to add their coins and the coin amount. Example of proper usage:\n\n!apollo add_coins @Member 1000```")
@@ -452,7 +452,7 @@ async def slot(ctx, bet_amount : int):
     result_list = [e[0] for e in result]
 
     if ctx.channel.id in result_list:
-        if bet_amount <= 500:
+        if bet_amount <= 2000:
             if bet_amount <= player_coin:
                 if (next_slot_time == None) or (datetime.datetime.now() > next_slot_time):
                     if stars_count == 1:
@@ -494,7 +494,7 @@ async def slot(ctx, bet_amount : int):
                 await ctx.send(f"Uh Oh! <@{member.id}> doesn't seem have enough coins to bet.")
         else:
             await ctx.message.add_reaction("❌")
-            await ctx.send(f"Uh Oh! <@{member.id}>'s bet amount must be below 500.")
+            await ctx.send(f"Uh Oh! <@{member.id}>'s bet amount must be below 2000.")
     else:
         await ctx.message.add_reaction("❌")
         await ctx.send(f"Uh Oh! <@{member.id}> can only play slot in slot machine channel.")
@@ -505,7 +505,7 @@ async def slot_error(ctx,error):
     if isinstance(error, commands.CommandInvokeError):
         await ctx.send(f"Uh Oh! Looks like {ctx.author.mention} haven't registered yet.")
     else:
-        await ctx.send("```Uh Oh! You can use slot machine and place a bet up to 500 coins. Example of proper usage:\n\n!apollo slot 100```")
+        await ctx.send("```Uh Oh! You can use slot machine and place a bet up to 2000 coins. Example of proper usage:\n\n!apollo slot 100```")
 
 @client.command('send')
 async def send(ctx, channel : discord.TextChannel, *, message):
@@ -555,51 +555,57 @@ async def donate(ctx, member : discord.User, donation_amount : int):
     conn = await get_conn()
     cursor = conn.cursor()
 
-    query = "SELECT next_donate_time FROM players WHERE player_id = %s"
+    query = "SELECT next_donate_time,coins FROM players WHERE player_id = %s"
     data = (donater.id,)
     cursor.execute(query,data)
     result = cursor.fetchall()
-    result_list = [e[0] for e in result]
-    next_donate_time = result_list[0]
+    donate_time = [e[0] for e in result]
+    player_coin  = [e[1] for e in result]
+    next_donate_time = donate_time[0]
+    player_coin = player_coin[0]
 
     query = "SELECT next_donation_time FROM players WHERE player_id = %s"
     data = (member.id,)
     cursor.execute(query,data)
     result = cursor.fetchall()
-    result_list = [e[0] for e in result]
-    next_donation_time = result_list[0]
+    donation_time = [e[0] for e in result]
+    next_donation_time = donation_time[0]
 
-    if (donation_amount < 5000):
-        if (datetime.datetime.now() > next_donate_time):
-            if (datetime.datetime.now() > next_donation_time):
-                query_donater = "UPDATE players SET coins = coins - %s, next_donate_time = %s, last_modified_at = %s where player_id = %s"
-                next_donate_time = datetime.datetime.now() + datetime.timedelta(minutes=5)
-                data_donater = (donation_amount, next_donate_time, datetime.datetime.now(), donater.id)
-                cursor.execute(query_donater, data_donater)
-                query_donate_to = "UPDATE players SET coins = coins + %s, next_donation_time = %s, last_modified_at = %s where player_id = %s"
-                next_donation_time = datetime.datetime.now() + datetime.timedelta(minutes=5)
-                data_donate_to = (donation_amount, next_donation_time, datetime.datetime.now(), member.id)
-                cursor.execute(query_donate_to, data_donate_to)
-                conn.commit()
-                await ctx.message.add_reaction("✅")
-                response = f"<@{donater.id}> Successfully donated {donation_amount} coins to <@{member.id}>"
+    if donation_amount <= player_coin:
+        if (donation_amount <= 50000):
+            if (datetime.datetime.now() > next_donate_time):
+                if (datetime.datetime.now() > next_donation_time):
+                    query_donater = "UPDATE players SET coins = coins - %s, next_donate_time = %s, last_modified_at = %s where player_id = %s"
+                    next_donate_time = datetime.datetime.now() + datetime.timedelta(minutes=5)
+                    data_donater = (donation_amount, next_donate_time, datetime.datetime.now(), donater.id)
+                    cursor.execute(query_donater, data_donater)
+                    query_donate_to = "UPDATE players SET coins = coins + %s, next_donation_time = %s, last_modified_at = %s where player_id = %s"
+                    next_donation_time = datetime.datetime.now() + datetime.timedelta(minutes=5)
+                    data_donate_to = (donation_amount, next_donation_time, datetime.datetime.now(), member.id)
+                    cursor.execute(query_donate_to, data_donate_to)
+                    conn.commit()
+                    await ctx.message.add_reaction("✅")
+                    response = f"<@{donater.id}> Successfully donated {donation_amount} coins to <@{member.id}>"
+                else:
+                    next_donation_time = next_donation_time - datetime.datetime.now()
+                    minutes = int((next_donation_time.seconds % 3600) / 60)
+                    hours = int(next_donation_time.seconds / 3600)
+                    seconds = int(next_donation_time.seconds % 60)
+                    await ctx.message.add_reaction("❌")
+                    response = f"Donation failed. <@{member.id}> will be able to be donated in {hours} hour(s) {minutes} minute(s) and {seconds} second(s)"
             else:
-                next_donation_time = next_donation_time - datetime.datetime.now()
-                minutes = int((next_donation_time.seconds % 3600) / 60)
-                hours = int(next_donation_time.seconds / 3600)
-                seconds = int(next_donation_time.seconds % 60)
+                next_donate_time = next_donate_time - datetime.datetime.now()
+                minutes = int((next_donate_time.seconds % 3600) / 60)
+                hours = int(next_donate_time.seconds / 3600)
+                seconds = int(next_donate_time.seconds % 60)
                 await ctx.message.add_reaction("❌")
-                response = f"Donation failed. <@{member.id}> will be able to be donated in {hours} hour(s) {minutes} minute(s) and {seconds} second(s)"
+                response = f"Donation failed. <@{donater.id}> will be able to donate in {hours} hour(s) {minutes} minute(s) and {seconds} second(s)"
         else:
-            next_donate_time = next_donate_time - datetime.datetime.now()
-            minutes = int((next_donate_time.seconds % 3600) / 60)
-            hours = int(next_donate_time.seconds / 3600)
-            seconds = int(next_donate_time.seconds % 60)
             await ctx.message.add_reaction("❌")
-            response = f"Donation failed. <@{donater.id}> will be able to donate in {hours} hour(s) {minutes} minute(s) and {seconds} second(s)"
+            response = f"Uh oh! <@{member.id}> cannot donate more than 50.000 coins!"
     else:
         await ctx.message.add_reaction("❌")
-        response = f"Uh oh! You cannot donate more than 5000 coins!"
+        response = f"Uh oh! <@{member.id}> doesn't seem to have coins that much!"
     
     await ctx.send(response)
 
@@ -607,6 +613,8 @@ async def donate(ctx, member : discord.User, donation_amount : int):
 async def donate_error(ctx,error):
     if isinstance(error, commands.CommandInvokeError):
         await ctx.send(f"Uh Oh! Looks like {ctx.author.mention} haven't registered yet.")
+    else:
+        await ctx.send(f"```Please type @member you want to donate and donation amount clearly. Example of proper usage:\n\n!apollo donate @Member 1000```")
 
 @client.command('shop')
 async def shop(ctx):
