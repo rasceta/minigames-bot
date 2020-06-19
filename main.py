@@ -178,7 +178,7 @@ async def on_raw_reaction_add(payload):
             if time_now <= max_reaction_time:
                 if payload.emoji.name == '👍':
                     query = "UPDATE players SET coins = coins + %s WHERE player_id = %s"
-                    data = (100,user_id)
+                    data = (200,user_id)
                     cursor.execute(query,data)
                     conn.commit()
                     conn.close()
