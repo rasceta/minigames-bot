@@ -488,7 +488,7 @@ async def slot(ctx, bet_amount : int):
                     minutes = int((next_slot_time.seconds % 3600) / 60)
                     seconds = int(next_slot_time.seconds % 60)
                     await ctx.message.add_reaction("❌")
-                    await ctx.send(f"```Uh Oh! <@{member.id}> can use slot machine again in {minutes}m and {seconds}s```")
+                    await ctx.send(f"Uh Oh! <@{member.id}> can use slot machine again in {minutes}m and {seconds}s")
             else:
                 await ctx.message.add_reaction("❌")
                 await ctx.send(f"Uh Oh! <@{member.id}> doesn't seem have enough coins to bet.")
