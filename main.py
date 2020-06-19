@@ -7,6 +7,7 @@ import asyncio
 import datetime
 
 from discord.ext import commands, tasks
+from dotenv import load_dotenv
 
 from queries import create_tables
 from guide_string import get_guide_string
@@ -15,17 +16,16 @@ from custom_functions.cardgames import get_card_game_intro, get_random_card_game
 
 client = commands.Bot(('!apollo ','!Apollo','!a','!A'))
 BOT_PREFIX = client.command_prefix
-TOKEN = os.environ.get('APOLLO_TOKEN')
+load_dotenv()
+TOKEN = os.getenv("APOLLO_TOKEN")
 TIME_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 
 async def get_conn():
-    with open('connection.json') as f:
-        data = json.load(f)
-    conn = psycopg2.connect(user=data["user"],
-                            password=data["password"],
-                            host=data["host"],
-                            port=data["port"],
-                            database=data["database"])
+    conn = psycopg2.connect(user=os.getenv("DATABASE_USERNAME"),
+                            password=os.getenv("DATABASE_PASSWORD"),
+                            host=os.getenv("DATABASE_HOST"),
+                            port=os.getenv("DATABASE_PORT"),
+                            database=os.getenv("DATABASE_DB"))
     return conn
 
 @tasks.loop(minutes=5)
@@ -218,6 +218,20 @@ async def on_raw_reaction_remove(payload):
     except:
         print('Max free coins reaction time is not set')
 
+@client.event
+async def on_message(message):
+    try:
+        conn = await get_conn()
+        cursor = conn.cursor()
+        query = "INSERT INTO servers(server_id,server_name,created_at,last_modified_at) VALUES(%s,%s,%s,%s)"
+        data = (message.guild.id, message.guild.name, datetime.datetime.now(), datetime.datetime.now())
+        cursor.execute(query,data)
+        conn.commit()
+        conn.close()
+    except:
+        pass
+    await client.process_commands(message)
+
 @commands.has_permissions(administrator=True)
 @client.command()
 async def clear(ctx, limits=5):
@@ -225,59 +239,116 @@ async def clear(ctx, limits=5):
 
 @commands.has_permissions(administrator=True)
 @client.command('card_game_channel')
-async def card_game_channel(ctx):
+async def card_game_channel(ctx, channel: discord.TextChannel):
     conn = await get_conn()
     cursor = conn.cursor()
     query = "UPDATE servers SET card_game_channel_id = %s WHERE server_id = %s"
-    data = (ctx.channel.id, ctx.guild.id)
+    data = (channel.id, ctx.guild.id)
     cursor.execute(query, data)
     conn.commit()
     conn.close()
 
     await ctx.message.add_reaction("✅")
-    await ctx.send("You have set this channel as `Minigame Channel`")
+    await ctx.send(f"You have set {channel.mention} as `Card Game Channel`")
+
+@card_game_channel.error
+async def card_game_channel_error(ctx, error):
+    if isinstance(error, commands.MissingRequiredArgument):
+        conn = await get_conn()
+        cursor = conn.cursor()
+        query = "UPDATE servers SET card_game_channel_id = %s WHERE server_id = %s"
+        data = (ctx.channel.id, ctx.guild.id)
+        cursor.execute(query, data)
+        conn.commit()
+        conn.close()
+        
+        await ctx.message.add_reaction("✅")
+        await ctx.send("You have set this channel as `Exchange Channel`")
 
 @commands.has_permissions(administrator=True)
 @client.command('exchange_channel')
-async def exchange_channel(ctx):
+async def exchange_channel(ctx, channel : discord.TextChannel):
     conn = await get_conn()
     cursor = conn.cursor()
     query = "UPDATE servers SET exchange_channel_id = %s WHERE server_id = %s"
-    data = (ctx.channel.id, ctx.guild.id)
+    data = (channel.id, ctx.guild.id)
     cursor.execute(query, data)
     conn.commit()
     conn.close()
     
     await ctx.message.add_reaction("✅")
-    await ctx.send("You have set this channel as `Exchange Channel`")
+    await ctx.send(f"You have set {channel.mention} as `Exchange Channel`")
+
+@exchange_channel.error
+async def exchange_channel_error(ctx,error):
+    if isinstance(error, commands.MissingRequiredArgument):
+        conn = await get_conn()
+        cursor = conn.cursor()
+        query = "UPDATE servers SET exchange_channel_id = %s WHERE server_id = %s"
+        data = (ctx.channel.id, ctx.guild.id)
+        cursor.execute(query, data)
+        conn.commit()
+        conn.close()
+        
+        await ctx.message.add_reaction("✅")
+        await ctx.send("You have set this channel as `Exchange Channel`")
+
 
 @commands.has_permissions(administrator=True)
 @client.command('slot_game_channel')
-async def slot_game_channel(ctx):
+async def slot_game_channel(ctx, channel : discord.TextChannel):
     conn = await get_conn()
     cursor = conn.cursor()
     query = "UPDATE servers SET slot_game_channel_id = %s WHERE server_id = %s"
-    data = (ctx.channel.id, ctx.guild.id)
+    data = (channel.id, ctx.guild.id)
     cursor.execute(query, data)
     conn.commit()
     conn.close()
     
     await ctx.message.add_reaction("✅")
-    await ctx.send("You have set this channel as `Slot machine game Channel`")
+    await ctx.send(f"You have set {channel.mention} as `Slot machine game Channel`")
+
+@slot_game_channel.error
+async def slot_game_channel_error(ctx,error):
+    if isinstance(error, commands.MissingRequiredArgument):
+        conn = await get_conn()
+        cursor = conn.cursor()
+        query = "UPDATE servers SET slot_game_channel_id = %s WHERE server_id = %s"
+        data = (ctx.channel.id, ctx.guild.id)
+        cursor.execute(query, data)
+        conn.commit()
+        conn.close()
+        
+        await ctx.message.add_reaction("✅")
+        await ctx.send("You have set this channel as `Slot game Channel`")
 
 @commands.has_permissions(administrator=True)
 @client.command('count_game_channel')
-async def count_game_channel(ctx):
+async def count_game_channel(ctx, channel : discord.TextChannel):
     conn = await get_conn()
     cursor = conn.cursor()
     query = "UPDATE servers SET count_game_channel_id = %s WHERE server_id = %s"
-    data = (ctx.channel.id, ctx.guild.id)
+    data = (channel.id, ctx.guild.id)
     cursor.execute(query, data)
     conn.commit()
     conn.close()
     
     await ctx.message.add_reaction("✅")
-    await ctx.send("You have set this channel as `Chain counting game Channel`")
+    await ctx.send(f"You have set {channel.mention} as `Chain counting game Channel`")
+
+@count_game_channel.error
+async def count_game_channel_error(ctx,error):
+    if isinstance(error, commands.MissingRequiredArgument):
+        conn = await get_conn()
+        cursor = conn.cursor()
+        query = "UPDATE servers SET count_game_channel_id = %s WHERE server_id = %s"
+        data = (ctx.channel.id, ctx.guild.id)
+        cursor.execute(query, data)
+        conn.commit()
+        conn.close()
+        
+        await ctx.message.add_reaction("✅")
+        await ctx.send("You have set this channel as `Chain counting game Channel`")
 
 @commands.has_permissions(administrator=True)
 @client.command('query')
@@ -405,7 +476,10 @@ async def slot(ctx, bet_amount : int):
 @slot.error
 async def slot_error(ctx,error):
     await ctx.message.add_reaction("❌")
-    await ctx.send("```Uh Oh! You can use slot machine and place a bet up to 500 coins. Example of proper usage:\n\n!apollo slot 100```")
+    if isinstance(error, commands.CommandInvokeError):
+        await ctx.send(f"Uh Oh! Looks like {ctx.author.mention} haven't registered yet.")
+    else:
+        await ctx.send("```Uh Oh! You can use slot machine and place a bet up to 500 coins. Example of proper usage:\n\n!apollo slot 100```")
 
 @client.command('send')
 async def send(ctx, channel : discord.TextChannel, *, message):
@@ -442,6 +516,11 @@ async def items(ctx):
     embed.add_field(name="💰Coins", value=player_coin, inline=False)
     embed.add_field(name="🎒Items", value=items_list, inline=False)
     await ctx.send(embed=embed)
+
+@items.error
+async def items_error(ctx,error):
+    if isinstance(error, commands.CommandInvokeError):
+        await ctx.send(f"Uh Oh! Looks like {ctx.author.mention} haven't registered yet.")
 
 @client.command('donate')
 async def donate(ctx, member : discord.User, donation_amount : int):
@@ -498,6 +577,11 @@ async def donate(ctx, member : discord.User, donation_amount : int):
     
     await ctx.send(response)
 
+@donate.error
+async def donate_error(ctx,error):
+    if isinstance(error, commands.CommandInvokeError):
+        await ctx.send(f"Uh Oh! Looks like {ctx.author.mention} haven't registered yet.")
+
 @client.command('shop')
 async def shop(ctx):
     embed = discord.Embed(  title="Apollo's Shop",
@@ -551,7 +635,10 @@ async def purchase(ctx, *, item : str):
 @purchase.error
 async def purchase_error(ctx,error):
     await ctx.message.add_reaction("❌")
-    await ctx.send("```Uh Oh! You need to define the item you want to purchase. Example of proper usage: \n\n!apollo exchange soup kettle token```")
+    if isinstance(error, commands.CommandInvokeError):
+        await ctx.send(f"Uh Oh! Looks like {ctx.author.mention} haven't registered yet.")
+    else:
+        await ctx.send("```Uh Oh! You need to define the item you want to purchase. Example of proper usage: \n\n!apollo exchange soup kettle token```")
 
 @client.command('exchange')
 async def exchange(ctx, *, item : str):
@@ -600,7 +687,10 @@ async def exchange(ctx, *, item : str):
 @exchange.error
 async def exchange_error(ctx,error):
     await ctx.message.add_reaction("❌")
-    await ctx.send("```Uh Oh! You need to define the item you want to exchange. Example of proper usage: \n\n!apollo exchange soup kettle token```")
+    if isinstance(error, commands.CommandInvokeError):
+        await ctx.send(f"Uh Oh! Looks like {ctx.author.mention} haven't registered yet.")
+    else:
+        await ctx.send("```Uh Oh! You need to define the item you want to exchange. Example of proper usage: \n\n!apollo exchange soup kettle token```")
 
 @client.command('guess')
 async def guess(ctx, guess_answer, bet_amount):
@@ -703,8 +793,11 @@ async def guess(ctx, guess_answer, bet_amount):
 @guess.error
 async def guess_error(ctx, error):
     await ctx.message.add_reaction("❌")
-    await ctx.send(f"```Please input your answer and bet amount clearly. Example of proper usage: !apollo guess red 100```")
-    await ctx.send(error)
+    if isinstance(error, commands.CommandInvokeError):
+        await ctx.send(f"Uh Oh! Looks like {ctx.author.mention} haven't registered yet.")
+    else:
+        await ctx.send(f"```Please input your answer and bet amount clearly. Example of proper usage: !apollo guess red 100```")
+        await ctx.send(error)
 
 @client.command(name='leaderboard',aliases=['rank'])
 async def leaderboard(ctx):
@@ -732,7 +825,7 @@ async def leaderboard(ctx):
 
 @client.command('guide')
 async def guide(ctx):
-    guide = get_guide_string
+    guide = get_guide_string()
     await ctx.send(guide)
 
 apollo_free_coins.start()

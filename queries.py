@@ -1,18 +1,17 @@
 import psycopg2
-import json
+import os
 import discord
 import datetime
+from dotenv import load_dotenv
 
+load_dotenv()
 async def create_tables():
-    with open('connection.json') as f:
-        data = json.load(f)
-    conn = psycopg2.connect(user=data["user"],
-                            password=data["password"],
-                            host=data["host"],
-                            port=data["port"],
-                            database=data["database"])
-    cursor = conn.cursor()
 
+    conn = psycopg2.connect(user=os.getenv("DATABASE_USERNAME"),
+                            password=os.getenv("DATABASE_PASSWORD"),
+                            host=os.getenv("DATABASE_HOST"),
+                            port=os.getenv("DATABASE_PORT"),
+                            database=os.getenv("DATABASE_DB"))
     query_players = '''
 CREATE TABLE IF NOT EXISTS public.players (
 	player_id BIGINT PRIMARY KEY,
@@ -57,6 +56,7 @@ CREATE TABLE IF NOT EXISTS public.servers (
 	last_modified_at TIMESTAMP
 );
     '''
+    cursor = conn.cursor()
     cursor.execute(query_players)
     cursor.execute(query_items)
     cursor.execute(query_servers)
