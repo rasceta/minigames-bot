@@ -14,7 +14,7 @@ from guide_string import get_guide_string
 from custom_functions.slotmachine import get_slot
 from custom_functions.cardgames import get_card_game_intro, get_random_card_game_name, get_card_game_outro
 
-client = commands.Bot(('!apollo ','!Apollo','!a','!A'))
+client = commands.Bot(('!apollo ','!Apollo ','!a ','!A '))
 BOT_PREFIX = client.command_prefix
 load_dotenv()
 TOKEN = os.getenv("APOLLO_TOKEN")
@@ -39,28 +39,30 @@ async def apollo_free_coins():
 
     channel_id = 0
     for channel_id in card_game_channel_id_list:
-        channel = client.get_channel(channel_id)
-        embed = discord.Embed(title="Free Coins",
-                            description=f"Hello, hello! The mysterious coin creature's here. It has returned for all to see! It's here to give you all free coins! Yes! You heard that right! Free coins!")
-        embed.set_thumbnail(url="https://media.discordapp.net/attachments/717658774265004052/720890485966766100/Bell_MK8.png")
-        embed.set_footer(text="React with the 👍 reaction! Quickly! I must go in 40 seconds!")
-        new_message = await channel.send(embed=embed)
-        await new_message.add_reaction("👍")
-        max_reaction_time = datetime.datetime.now() + datetime.timedelta(seconds=40)
+        if channel_id != None:
+            channel = client.get_channel(channel_id)
+            embed = discord.Embed(title="Free Coins",
+                                description=f"Hello, hello! The mysterious coin creature's here. It has returned for all to see! It's here to give you all free coins! Yes! You heard that right! Free coins!")
+            embed.set_thumbnail(url="https://media.discordapp.net/attachments/717658774265004052/720890485966766100/Bell_MK8.png")
+            embed.set_footer(text="React with the 👍 reaction! Quickly! I must go in 40 seconds!")
+            new_message = await channel.send(embed=embed)
+            await new_message.add_reaction("👍")
+            max_reaction_time = datetime.datetime.now() + datetime.timedelta(seconds=40)
 
-        query = "UPDATE servers SET last_free_coins_message_id = %s, max_free_coins_reaction_time = %s WHERE card_game_channel_id = %s"
-        data = (new_message.id, max_reaction_time, channel_id)
-        cursor.execute(query,data)
-        conn.commit()
-        conn.close()
+            query = "UPDATE servers SET last_free_coins_message_id = %s, max_free_coins_reaction_time = %s WHERE card_game_channel_id = %s"
+            data = (new_message.id, max_reaction_time, channel_id)
+            cursor.execute(query,data)
+            conn.commit()
+            conn.close()
 
     embed = discord.Embed(title="Free Coins",
                         description="I must go now! Toodle doo~ I'll be back whenever!")
     embed.set_thumbnail(url="https://media.discordapp.net/attachments/717658774265004052/720890485966766100/Bell_MK8.png")
     await asyncio.sleep(40)
     for channel_id in card_game_channel_id_list:
-        channel = client.get_channel(channel_id)
-        await channel.send(embed=embed)
+        if channel_id != None:
+            channel = client.get_channel(channel_id)
+            await channel.send(embed=embed)
 
 @apollo_free_coins.before_loop
 async def apollo_free_coins_before():
@@ -91,14 +93,15 @@ async def apollo_card_games():
     embed.set_thumbnail(url="http://clipart-library.com/images/pT5o6baac.jpg")
 
     for channel_id in card_game_channel_id_list:
-        channel = client.get_channel(channel_id)
-        new_message = await channel.send(embed=embed)
-        max_card_games_reaction_time = datetime.datetime.now() + datetime.timedelta(minutes=1)
+        if channel_id != None:
+            channel = client.get_channel(channel_id)
+            new_message = await channel.send(embed=embed)
+            max_card_games_reaction_time = datetime.datetime.now() + datetime.timedelta(minutes=1)
 
-        query = "UPDATE servers SET last_card_games_name = %s, last_card_games_answer = %s, last_card_games_message_id = %s, max_card_games_reaction_time = %s, last_modified_at = %s WHERE card_game_channel_id = %s"
-        data = (game_name, answer, new_message.id, max_card_games_reaction_time, datetime.datetime.now(), channel_id)
-        cursor.execute(query,data)
-        conn.commit()
+            query = "UPDATE servers SET last_card_games_name = %s, last_card_games_answer = %s, last_card_games_message_id = %s, max_card_games_reaction_time = %s, last_modified_at = %s WHERE card_game_channel_id = %s"
+            data = (game_name, answer, new_message.id, max_card_games_reaction_time, datetime.datetime.now(), channel_id)
+            cursor.execute(query,data)
+            conn.commit()
 
     try:
         await asyncio.sleep(60)
@@ -127,8 +130,9 @@ async def apollo_card_games():
         embed.add_field(name="**Winners**",value=players_won)
 
         for c_id in card_game_channel_id_list:
-            channel = client.get_channel(c_id)    
-            await channel.send(embed=embed)
+            if c_id != None:
+                channel = client.get_channel(c_id)    
+                await channel.send(embed=embed)
         
         conn.close()
     except Exception as e:
@@ -423,9 +427,8 @@ async def slot(ctx, bet_amount : int):
     cursor.execute(query)
     result = cursor.fetchall()
     result_list = [e[0] for e in result]
-    channel_id = result_list[0]
 
-    if ctx.channel.id == channel_id:
+    if ctx.channel.id in result_list:
         if bet_amount <= 500:
             if bet_amount <= player_coin:
                 if (next_slot_time == None) or (datetime.datetime.now() > next_slot_time):
@@ -471,7 +474,7 @@ async def slot(ctx, bet_amount : int):
             await ctx.send(f"Uh Oh! <@{member.id}>'s bet amount must be below 500.")
     else:
         await ctx.message.add_reaction("❌")
-        await ctx.send(f"Uh Oh! <@{member.id}> can only play slot in {client.get_channel(channel_id).mention}.")
+        await ctx.send(f"Uh Oh! <@{member.id}> can only play slot in slot machine channel.")
 
 @slot.error
 async def slot_error(ctx,error):
