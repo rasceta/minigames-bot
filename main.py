@@ -751,7 +751,7 @@ async def guess(ctx, guess_answer, bet_amount):
     if (datetime.datetime.now() < max_card_games_reaction_time):
         if (bet_amount <= player_coin):
             if (last_card_games_name == "GTC"):
-                if (bet_amount <= 1000):
+                if (bet_amount <= 2000):
                     if (guess_answer in ["red","black"]):
                         if (guess_answer == last_card_games_answer):
                             new_coins = bet_amount
