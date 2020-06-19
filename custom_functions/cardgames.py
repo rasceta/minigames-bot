@@ -12,7 +12,7 @@ def get_card_game_intro(game_name):
         title = "**Guess the Color**"
         description = '''Want to even the odds? I got a game just for you!
 
-**Guess a color!** It's a 50/50 chance! What's there to lose? You can only bet **1000** amount of coins!
+**Guess a color!** It's a 50/50 chance! What's there to lose? You can only bet **2000** amount of coins!
 Please enter `!apollo guess [red/black] <bet amount>` to participate! Place your bets everyone! **Place your bets!**
 
 Looking forward to your answers!
