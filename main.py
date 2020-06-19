@@ -32,13 +32,13 @@ async def get_conn():
 async def apollo_free_coins():
     conn = await get_conn()
     cursor = conn.cursor()
-    query = "SELECT card_game_channel_id from servers"
+    query = "SELECT free_coins_channel_id from servers"
     cursor.execute(query)
     result = cursor.fetchall()
-    card_game_channel_id_list = [e[0] for e in result]
+    free_coins_channel_id_list = [e[0] for e in result]
 
     channel_id = 0
-    for channel_id in card_game_channel_id_list:
+    for channel_id in free_coins_channel_id_list:
         if channel_id != None:
             channel = client.get_channel(channel_id)
             embed = discord.Embed(title="Free Coins",
@@ -49,7 +49,7 @@ async def apollo_free_coins():
             await new_message.add_reaction("👍")
             max_reaction_time = datetime.datetime.now() + datetime.timedelta(seconds=40)
 
-            query = "UPDATE servers SET last_free_coins_message_id = %s, max_free_coins_reaction_time = %s WHERE card_game_channel_id = %s"
+            query = "UPDATE servers SET last_free_coins_message_id = %s, max_free_coins_reaction_time = %s WHERE free_coins_channel_id = %s"
             data = (new_message.id, max_reaction_time, channel_id)
             cursor.execute(query,data)
             conn.commit()
@@ -59,7 +59,7 @@ async def apollo_free_coins():
                         description="I must go now! Toodle doo~ I'll be back whenever!")
     embed.set_thumbnail(url="https://media.discordapp.net/attachments/717658774265004052/720890485966766100/Bell_MK8.png")
     await asyncio.sleep(40)
-    for channel_id in card_game_channel_id_list:
+    for channel_id in free_coins_channel_id_list:
         if channel_id != None:
             channel = client.get_channel(channel_id)
             await channel.send(embed=embed)
@@ -163,8 +163,6 @@ async def on_raw_reaction_add(payload):
     user_id = payload.user_id
     message_id = payload.message_id
     guild_id = payload.guild_id
-    channel_id = payload.channel_id
-    channel = client.get_channel(channel_id)
 
     conn = await get_conn()
     cursor = conn.cursor()
@@ -179,14 +177,13 @@ async def on_raw_reaction_add(payload):
             time_now = datetime.datetime.now()
             if time_now <= max_reaction_time:
                 if payload.emoji.name == '👍':
-                    await channel.send(f"<@{user_id}> reacted with {payload.emoji} and got 100 free coins!")
                     query = "UPDATE players SET coins = coins + %s WHERE player_id = %s"
                     data = (100,user_id)
                     cursor.execute(query,data)
                     conn.commit()
                     conn.close()
             else:
-                await channel.send("Reaction time has ended. Wait for next Free Coins message!")
+                pass
     except:
         print('Max free coins reaction time is not set')
 
@@ -195,8 +192,6 @@ async def on_raw_reaction_remove(payload):
     user_id = payload.user_id
     message_id = payload.message_id
     guild_id = payload.guild_id
-    channel_id = payload.channel_id
-    channel = client.get_channel(channel_id)
 
     conn = await get_conn()
     cursor = conn.cursor()
@@ -211,14 +206,13 @@ async def on_raw_reaction_remove(payload):
             time_now = datetime.datetime.now()
             if time_now <= max_reaction_time:
                 if payload.emoji.name == '👍':
-                    await channel.send(f"<@{user_id}> removed {payload.emoji} and lost 100 coins!")
                     query = "UPDATE players SET coins = coins - %s WHERE player_id = %s"
                     data = (100,user_id)
                     cursor.execute(query,data)
                     conn.commit()
                     conn.close()
             else:
-                await channel.send("Reaction time has ended. Wait for next Free Coins message!")
+                pass
     except:
         print('Max free coins reaction time is not set')
 
@@ -240,6 +234,34 @@ async def on_message(message):
 @client.command()
 async def clear(ctx, limits=5):
     await ctx.channel.purge(limit=limits)
+
+@commands.has_permissions(administrator=True)
+@client.command('free_coins_channel')
+async def free_coins_channel(ctx, channel: discord.TextChannel):
+    conn = await get_conn()
+    cursor = conn.cursor()
+    query = "UPDATE servers SET free_coins_channel_id = %s WHERE server_id = %s"
+    data = (channel.id, ctx.guild.id)
+    cursor.execute(query, data)
+    conn.commit()
+    conn.close()
+
+    await ctx.message.add_reaction("✅")
+    await ctx.send(f"You have set {channel.mention} as `Free Coins Channel`")
+
+@free_coins_channel.error
+async def free_coins_channel_error(ctx, error):
+    if isinstance(error, commands.MissingRequiredArgument):
+        conn = await get_conn()
+        cursor = conn.cursor()
+        query = "UPDATE servers SET free_coins_channel_id = %s WHERE server_id = %s"
+        data = (ctx.channel.id, ctx.guild.id)
+        cursor.execute(query, data)
+        conn.commit()
+        conn.close()
+        
+        await ctx.message.add_reaction("✅")
+        await ctx.send("You have set this channel as `Free Coins Channel`")
 
 @commands.has_permissions(administrator=True)
 @client.command('card_game_channel')
@@ -267,7 +289,7 @@ async def card_game_channel_error(ctx, error):
         conn.close()
         
         await ctx.message.add_reaction("✅")
-        await ctx.send("You have set this channel as `Exchange Channel`")
+        await ctx.send("You have set this channel as `Card Game Channel`")
 
 @commands.has_permissions(administrator=True)
 @client.command('exchange_channel')
@@ -356,14 +378,15 @@ async def count_game_channel_error(ctx,error):
 
 @commands.has_permissions(administrator=True)
 @client.command('query')
-async def query(ctx, *, query):
-    user = client.get_user(ctx.author.id)
-    conn = await get_conn()
-    cursor = conn.cursor()
-    cursor.execute(query)
-    result = cursor.fetchall()
-    conn.close()
-    await user.send(result)
+async def query(ctx, *, query : str):
+    if 'select' in query.lower():
+        user = client.get_user(ctx.author.id)
+        conn = await get_conn()
+        cursor = conn.cursor()
+        cursor.execute(query)
+        result = cursor.fetchall()
+        conn.close()
+        await user.send(result)
 
 @commands.has_role('Game Master')
 @client.command('add_coins')

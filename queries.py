@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS public.servers (
 	slot_game_channel_id BIGINT,
 	count_game_channel_id BIGINT,
 	exchange_channel_id BIGINT,
+	free_coins_channel_id BIGINT,
 	last_free_coins_message_id BIGINT,
 	max_free_coins_reaction_time TIMESTAMP,
 	last_card_games_name TEXT,
