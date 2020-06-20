@@ -207,7 +207,7 @@ async def on_raw_reaction_remove(payload):
             if time_now <= max_reaction_time:
                 if payload.emoji.name == '👍':
                     query = "UPDATE players SET coins = coins - %s WHERE player_id = %s"
-                    data = (100,user_id)
+                    data = (200,user_id)
                     cursor.execute(query,data)
                     conn.commit()
                     conn.close()
@@ -388,6 +388,26 @@ async def query(ctx, *, query : str):
         conn.close()
         await user.send(result)
 
+@commands.has_permissions(administrator=True)
+@client.command('start')
+async def start(ctx, *, task_name: str):
+    if task_name == "card":
+        apollo_card_games.start()
+    elif task_name == "coins":
+        apollo_free_coins.start()
+    await ctx.message.add_reaction("✅")
+    await ctx.author.send(f"{task_name} has successfully started.")
+
+@commands.has_permissions(administrator=True)
+@client.command('stop')
+async def stop(ctx, *, task_name: str):
+    if task_name == "card":
+        apollo_card_games.stop()
+    elif task_name == "coins":
+        apollo_free_coins.stop()
+    await ctx.message.add_reaction("✅")
+    await ctx.author.send(f"{task_name} has successfully stopped.")
+
 @commands.has_role('Game Master')
 @client.command('add_coins')
 async def add_coins(ctx, member : discord.User, coins : int):
@@ -507,51 +527,82 @@ async def slot_error(ctx,error):
     else:
         await ctx.send("```Uh Oh! You can use slot machine and place a bet up to 2000 coins. Example of proper usage:\n\n!apollo slot 100```")
 
+@commands.has_permissions(administrator=True)
 @client.command('send')
 async def send(ctx, channel : discord.TextChannel, *, message):
     await channel.send(message)
 
+@commands.has_role('Game Master')
 @client.command(name='items',aliases=['wallet','inventory','inv'])
-async def items(ctx):
-    member = ctx.author
+async def items(ctx, member: discord.User):
 
     conn = await get_conn()
     cursor = conn.cursor()
-    query_coin = "SELECT coins, last_card_game_answer_time FROM players where player_id = %s"
+    query_coin = "SELECT coins FROM players where player_id = %s"
     data_coin = (member.id,)
     cursor.execute(query_coin,data_coin)
     result = cursor.fetchall()
     player_coin = [e[0] for e in result]
-    player_answer_time = [e[1] for e in result]
     player_coin = player_coin[0]
-    player_answer_time = player_answer_time[0]
 
-    if (player_answer_time == None) or (datetime.datetime.now() > player_answer_time + datetime.timedelta(minutes=1)):
-        items_list = ["No Items"]
-        try:
-            query_items = "SELECT item_name FROM items where player_id = %s"
-            data_items = (member.id,)
-            cursor.execute(query_items,data_items)
-            result = cursor.fetchall()
-            items_list = [e[0] for e in result]
-        except:
-            pass
-        conn.close()
+    try:
+        query_items = "SELECT item_name FROM items where player_id = %s"
+        data_items = (member.id,)
+        cursor.execute(query_items,data_items)
+        result = cursor.fetchall()
+        items_list = [e[0] for e in result]
+    except:
+        pass
+    conn.close()
 
-        embed = discord.Embed(  title=f"{member.name}'s items info",
-                                color=discord.Color.gold())
-        embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717658774265004052/720890485966766100/Bell_MK8.png")
-        embed.add_field(name="Name", value=member.name, inline=False)
-        embed.add_field(name="💰Coins", value=player_coin, inline=False)
-        embed.add_field(name="🎒Items", value=items_list, inline=False)
-        await ctx.send(embed=embed)
-    else:
-        await ctx.send(f"Uh Oh! {member.mention} you can check your wallet 1 minute after locking in an answer!")
+    embed = discord.Embed(title=f"{member.name}'s items info",
+                            color=discord.Color.gold())
+    embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717658774265004052/720890485966766100/Bell_MK8.png")
+    embed.add_field(name="Name", value=member.name, inline=False)
+    embed.add_field(name="💰Coins", value=player_coin, inline=False)
+    embed.add_field(name="🎒Items", value=items_list, inline=False)
+    await ctx.send(embed=embed)
 
 @items.error
 async def items_error(ctx,error):
     if isinstance(error, commands.CommandInvokeError):
         await ctx.send(f"Uh Oh! Looks like {ctx.author.mention} haven't registered yet. Please register using `!apollo register`")
+    elif isinstance(error, commands.MissingRole):
+        await ctx.message.delete()
+    elif isinstance(error, commands.MissingRequiredArgument):
+        member = ctx.author
+        conn = await get_conn()
+        cursor = conn.cursor()
+        query_coin = "SELECT coins, last_card_game_answer_time FROM players where player_id = %s"
+        data_coin = (member.id,)
+        cursor.execute(query_coin,data_coin)
+        result = cursor.fetchall()
+        player_coin = [e[0] for e in result]
+        player_answer_time = [e[1] for e in result]
+        player_coin = player_coin[0]
+        player_answer_time = player_answer_time[0]
+
+        if (player_answer_time == None) or (datetime.datetime.now() > player_answer_time + datetime.timedelta(minutes=1)):
+            items_list = ["No Items"]
+            try:
+                query_items = "SELECT item_name FROM items where player_id = %s"
+                data_items = (member.id,)
+                cursor.execute(query_items,data_items)
+                result = cursor.fetchall()
+                items_list = [e[0] for e in result]
+            except:
+                pass
+            conn.close()
+
+            embed = discord.Embed(  title=f"{member.name}'s items info",
+                                    color=discord.Color.gold())
+            embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717658774265004052/720890485966766100/Bell_MK8.png")
+            embed.add_field(name="Name", value=member.name, inline=False)
+            embed.add_field(name="💰Coins", value=player_coin, inline=False)
+            embed.add_field(name="🎒Items", value=items_list, inline=False)
+            await ctx.send(embed=embed)
+        else:
+            await ctx.send(f"Uh Oh! {member.mention} you can check your wallet 1 minute after locking in an answer!")
 
 @client.command('donate')
 async def donate(ctx, member : discord.User, donation_amount : int):
@@ -874,7 +925,7 @@ async def guide(ctx):
     guide = get_guide_string()
     await ctx.send(guide)
 
-apollo_free_coins.start()
-apollo_card_games.start()
+# apollo_free_coins.start()
+# apollo_card_games.start()
 
 client.run(TOKEN)
