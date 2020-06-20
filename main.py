@@ -551,6 +551,8 @@ async def items(ctx, member: discord.User):
         cursor.execute(query_items,data_items)
         result = cursor.fetchall()
         items_list = [e[0] for e in result]
+        if items_list == []:
+            items_list = ["No Items"]
     except:
         pass
     conn.close()
@@ -560,16 +562,15 @@ async def items(ctx, member: discord.User):
     embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717658774265004052/720890485966766100/Bell_MK8.png")
     embed.add_field(name="Name", value=member.name, inline=False)
     embed.add_field(name="💰Coins", value=player_coin, inline=False)
-    embed.add_field(name="🎒Items", value=items_list, inline=False)
+    embed.add_field(name="🎒Items", value=", ".join(items_list), inline=False)
     await ctx.send(embed=embed)
 
 @items.error
 async def items_error(ctx,error):
     if isinstance(error, commands.CommandInvokeError):
         await ctx.send(f"Uh Oh! Looks like {ctx.author.mention} haven't registered yet. Please register using `!apollo register`")
-    elif isinstance(error, commands.MissingRole):
-        await ctx.message.delete()
-    elif isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send(error)
+    elif isinstance(error, commands.MissingRole) or isinstance(error, commands.MissingRequiredArgument):
         member = ctx.author
         conn = await get_conn()
         cursor = conn.cursor()
@@ -590,6 +591,8 @@ async def items_error(ctx,error):
                 cursor.execute(query_items,data_items)
                 result = cursor.fetchall()
                 items_list = [e[0] for e in result]
+                if items_list == []:
+                    items_list = ["No Items"]
             except:
                 pass
             conn.close()
@@ -599,7 +602,7 @@ async def items_error(ctx,error):
             embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717658774265004052/720890485966766100/Bell_MK8.png")
             embed.add_field(name="Name", value=member.name, inline=False)
             embed.add_field(name="💰Coins", value=player_coin, inline=False)
-            embed.add_field(name="🎒Items", value=items_list, inline=False)
+            embed.add_field(name="🎒Items", value=", ".join(items_list), inline=False)
             await ctx.send(embed=embed)
         else:
             await ctx.send(f"Uh Oh! {member.mention} you can check your wallet 1 minute after locking in an answer!")
