@@ -546,7 +546,7 @@ async def items(ctx):
         embed.add_field(name="🎒Items", value=items_list, inline=False)
         await ctx.send(embed=embed)
     else:
-        await ctx.send(f"Uh Oh! {member.mention} you can check your wallet 1 minute after locking in an answer!.")
+        await ctx.send(f"Uh Oh! {member.mention} you can check your wallet 1 minute after locking in an answer!")
 
 @items.error
 async def items_error(ctx,error):
