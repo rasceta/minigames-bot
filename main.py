@@ -581,11 +581,11 @@ async def donate(ctx, member : discord.User, donation_amount : int):
             if (datetime.datetime.now() > next_donate_time):
                 if (datetime.datetime.now() > next_donation_time):
                     query_donater = "UPDATE players SET coins = coins - %s, next_donate_time = %s, last_modified_at = %s where player_id = %s"
-                    next_donate_time = datetime.datetime.now() + datetime.timedelta(minutes=5)
+                    next_donate_time = datetime.datetime.now() + datetime.timedelta(seconds=5)
                     data_donater = (donation_amount, next_donate_time, datetime.datetime.now(), donater.id)
                     cursor.execute(query_donater, data_donater)
                     query_donate_to = "UPDATE players SET coins = coins + %s, next_donation_time = %s, last_modified_at = %s where player_id = %s"
-                    next_donation_time = datetime.datetime.now() + datetime.timedelta(minutes=5)
+                    next_donation_time = datetime.datetime.now() + datetime.timedelta(minutes=1)
                     data_donate_to = (donation_amount, next_donation_time, datetime.datetime.now(), member.id)
                     cursor.execute(query_donate_to, data_donate_to)
                     conn.commit()
@@ -864,6 +864,9 @@ async def leaderboard(ctx):
                           description=response)
     embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717658774265004052/720890485966766100/Bell_MK8.png")
 
+    await ctx.send(f"Alright {ctx.author.mention} please wait one minute while I tally the results...")
+    await asyncio.sleep(70)
+    await ctx.send(f"Here you go {ctx.author.mention}!")
     await ctx.send(embed=embed)
 
 @client.command('guide')
