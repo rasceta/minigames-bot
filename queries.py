@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS public.players (
 	next_slot_time TIMESTAMP,
 	next_donate_time TIMESTAMP,
 	next_donation_time TIMESTAMP,
+	next_daily_coins_time TIMESTAMP,
 	created_at TIMESTAMP,
 	last_modified_at TIMESTAMP
 );
@@ -47,6 +48,7 @@ CREATE TABLE IF NOT EXISTS public.servers (
 	count_game_channel_id BIGINT,
 	exchange_channel_id BIGINT,
 	free_coins_channel_id BIGINT,
+	bot_channel_id BIGINT,
 	last_free_coins_message_id BIGINT,
 	max_free_coins_reaction_time TIMESTAMP,
 	last_card_games_name TEXT,

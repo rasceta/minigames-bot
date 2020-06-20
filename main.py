@@ -559,7 +559,7 @@ async def items(ctx, member: discord.User):
 
     embed = discord.Embed(title=f"{member.name}'s items info",
                             color=discord.Color.gold())
-    embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717658774265004052/720890485966766100/Bell_MK8.png")
+    embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717658774265004052/723924559446802502/coins2.png")
     embed.add_field(name="Name", value=member.name, inline=False)
     embed.add_field(name="💰Coins", value=player_coin, inline=False)
     embed.add_field(name="🎒Items", value=", ".join(items_list), inline=False)
@@ -599,13 +599,62 @@ async def items_error(ctx,error):
 
             embed = discord.Embed(  title=f"{member.name}'s items info",
                                     color=discord.Color.gold())
-            embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717658774265004052/720890485966766100/Bell_MK8.png")
+            embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717658774265004052/723924559446802502/coins2.png")
             embed.add_field(name="Name", value=member.name, inline=False)
             embed.add_field(name="💰Coins", value=player_coin, inline=False)
             embed.add_field(name="🎒Items", value=", ".join(items_list), inline=False)
             await ctx.send(embed=embed)
         else:
             await ctx.send(f"Uh Oh! {member.mention} you can check your wallet 1 minute after locking in an answer!")
+
+@client.command('daily')
+async def daily(ctx):
+    member = ctx.author
+    conn = await get_conn()
+    cursor = conn.cursor()
+    query_daily = "SELECT next_daily_coins_time FROM players where player_id = %s"
+    data_daily = (member.id,)
+    cursor.execute(query_daily,data_daily)
+    result = cursor.fetchall()
+    next_daily_coins = [e[0] for e in result]
+    next_daily_coins = next_daily_coins[0]
+
+    if isinstance(next_daily_coins, datetime.datetime):
+        if (datetime.datetime.now () > next_daily_coins):
+            if discord.utils.get(member.roles, name="💎Giver💎") is not None:
+                free_coins = 10000
+            elif discord.utils.get(member.roles, name="🔰 Donor 🔰") is not None:
+                free_coins = 1500
+            elif discord.utils.get(member.roles, name="Members") is not None:
+                free_coins = 400
+            query = "UPDATE players SET coins = coins + %s, next_daily_coins_time = %s where player_id = %s"
+            next_daily_coins = datetime.datetime.now() + datetime.timedelta(days=1)
+            data = (free_coins, next_daily_coins, member.id)
+            cursor.execute(query, data)
+            await ctx.message.add_reaction("✅")
+            await ctx.send(f"{ctx.author.mention}, thank you! You have claimed your daily reward of {free_coins} coins! Please check again tomorrow!")
+        else:
+            next_daily_coins = next_daily_coins - datetime.datetime.now()
+            minutes = int((next_daily_coins.seconds % 3600) / 60)
+            hours = int(next_daily_coins.seconds / 3600)
+            seconds = int(next_daily_coins.seconds % 60)
+            await ctx.message.add_reaction("❌")
+            await ctx.send(f"{ctx.author.mention}, you still have {hours} hour(s) {minutes} minute(s) and {seconds} second(s) before your next daily reward!")
+    conn.commit()
+    conn.close()
+
+@commands.has_permissions(administrator=True)
+@client.command('reset_daily')
+async def reset_daily(ctx):
+    conn = await get_conn()
+    cursor = conn.cursor()
+
+    query = "UPDATE players SET next_daily_coins_time = current_timestamp"
+    cursor.execute(query)
+    conn.commit()
+    conn.close()
+    await ctx.message.add_reaction("✅")
+    await ctx.send("All players free daily coins has been reset to now")
 
 @client.command('donate')
 async def donate(ctx, member : discord.User, donation_amount : int):
@@ -828,7 +877,7 @@ async def guess(ctx, guess_answer, bet_amount):
                             response = f"<@{member.id}>'s answer must be black/red"
                     else:
                         await ctx.message.add_reaction("❌")
-                        response = f"Sorry <@{member.id}>. You can only bet up to 1000"
+                        response = f"Sorry <@{member.id}>. You can only bet up to 2000"
                 elif (last_card_games_name == "PCC"):
                     if (bet_amount <= 4000):
                         if (guess_answer in ["spade","club","diamond","heart"]):
