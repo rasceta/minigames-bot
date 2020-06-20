@@ -503,7 +503,7 @@ async def slot(ctx, bet_amount : int):
 async def slot_error(ctx,error):
     await ctx.message.add_reaction("❌")
     if isinstance(error, commands.CommandInvokeError):
-        await ctx.send(f"Uh Oh! Looks like {ctx.author.mention} haven't registered yet.")
+        await ctx.send(f"Uh Oh! Looks like {ctx.author.mention} haven't registered yet. Please register using `!apollo register`")
     else:
         await ctx.send("```Uh Oh! You can use slot machine and place a bet up to 2000 coins. Example of proper usage:\n\n!apollo slot 100```")
 
@@ -517,36 +517,41 @@ async def items(ctx):
 
     conn = await get_conn()
     cursor = conn.cursor()
-    query_coin = "SELECT coins FROM players where player_id = %s"
+    query_coin = "SELECT coins, last_card_game_answer_time FROM players where player_id = %s"
     data_coin = (member.id,)
     cursor.execute(query_coin,data_coin)
     result = cursor.fetchall()
-    result_list = [e[0] for e in result]
-    player_coin = result_list[0]
+    player_coin = [e[0] for e in result]
+    player_answer_time = [e[1] for e in result]
+    player_coin = player_coin[0]
+    player_answer_time = player_answer_time[0]
 
-    items_list = ["No Items"]
-    try:
-        query_items = "SELECT item_name FROM items where player_id = %s"
-        data_items = (member.id,)
-        cursor.execute(query_items,data_items)
-        result = cursor.fetchall()
-        items_list = [e[0] for e in result]
-    except:
-        pass
-    conn.close()
+    if datetime.datetime.now() > player_answer_time + datetime.timedelta(minutes=1):
+        items_list = ["No Items"]
+        try:
+            query_items = "SELECT item_name FROM items where player_id = %s"
+            data_items = (member.id,)
+            cursor.execute(query_items,data_items)
+            result = cursor.fetchall()
+            items_list = [e[0] for e in result]
+        except:
+            pass
+        conn.close()
 
-    embed = discord.Embed(  title=f"{member.name}'s items info",
-                            color=discord.Color.gold())
-    embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717658774265004052/720890485966766100/Bell_MK8.png")
-    embed.add_field(name="Name", value=member.name, inline=False)
-    embed.add_field(name="💰Coins", value=player_coin, inline=False)
-    embed.add_field(name="🎒Items", value=items_list, inline=False)
-    await ctx.send(embed=embed)
+        embed = discord.Embed(  title=f"{member.name}'s items info",
+                                color=discord.Color.gold())
+        embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717658774265004052/720890485966766100/Bell_MK8.png")
+        embed.add_field(name="Name", value=member.name, inline=False)
+        embed.add_field(name="💰Coins", value=player_coin, inline=False)
+        embed.add_field(name="🎒Items", value=items_list, inline=False)
+        await ctx.send(embed=embed)
+    else:
+        await ctx.send(f"Uh Oh! {member.mention} you can check your wallet 1 minute after locking in an answer!.")
 
 @items.error
 async def items_error(ctx,error):
     if isinstance(error, commands.CommandInvokeError):
-        await ctx.send(f"Uh Oh! Looks like {ctx.author.mention} haven't registered yet.")
+        await ctx.send(f"Uh Oh! Looks like {ctx.author.mention} haven't registered yet. Please register using `!apollo register`")
 
 @client.command('donate')
 async def donate(ctx, member : discord.User, donation_amount : int):
@@ -612,7 +617,7 @@ async def donate(ctx, member : discord.User, donation_amount : int):
 @donate.error
 async def donate_error(ctx,error):
     if isinstance(error, commands.CommandInvokeError):
-        await ctx.send(f"Uh Oh! Looks like {ctx.author.mention} haven't registered yet.")
+        await ctx.send(f"Uh Oh! Looks like {ctx.author.mention} haven't registered yet. Please register using `!apollo register`")
     else:
         await ctx.send(f"```Please type @member you want to donate and donation amount clearly. Example of proper usage:\n\n!apollo donate @Member 1000```")
 
@@ -621,7 +626,7 @@ async def shop(ctx):
     embed = discord.Embed(  title="Apollo's Shop",
                             description="Welcome to Apollo's Shop! You can purchase any of these items by typing `!apollo purchase <item>`",
                             color=discord.Color.green())
-    embed.add_field(name="**🍲Soup Kettle Token🍲**. Can be traded for a soup Kettle. Which you can then turn in the soup kettle for bells. Each soup kettle when given to a treasurer is worth 300,000 Bells", value="Price: 💰2.000",inline=False)
+    embed.add_field(name="**🍲Soup Kettle Token🍲**. Can be traded for a soup Kettle. Which you can then turn in the soup kettle for bells. Each soup kettle when given to a treasurer is worth 99,000 Bells", value="Price: 💰2.000",inline=False)
     embed.add_field(name="**🔴Foundation Token🔴**. Worth 1 stack of anything from the dodo code",value="Price: 💰10.000",inline=True)
     embed.add_field(name="**♥Heart Token♥**. Worth 3 stacks of anything from the dodo code",value="Price: 💰15.000")
 
@@ -670,7 +675,7 @@ async def purchase(ctx, *, item : str):
 async def purchase_error(ctx,error):
     await ctx.message.add_reaction("❌")
     if isinstance(error, commands.CommandInvokeError):
-        await ctx.send(f"Uh Oh! Looks like {ctx.author.mention} haven't registered yet.")
+        await ctx.send(f"Uh Oh! Looks like {ctx.author.mention} haven't registered yet. Please register using `!apollo register`")
     else:
         await ctx.send("```Uh Oh! You need to define the item you want to purchase. Example of proper usage: \n\n!apollo exchange soup kettle token```")
 
@@ -683,7 +688,7 @@ async def exchange(ctx, *, item : str):
         exchanged_item = splitted_words[0]
         exchanged_note = splitted_words[1]
         item = item.lower()
-        items_dict = {'soup kettle token':'300,000 Bells', 'foundation token':'1 stack of anything from the dodo code', 'heart token':'3 stacks of anything from the dodo code'}
+        items_dict = {'soup kettle token':'99,000 Bells', 'foundation token':'1 stack of anything from the dodo code', 'heart token':'3 stacks of anything from the dodo code'}
 
         conn = await get_conn()
         cursor = conn.cursor()
@@ -722,11 +727,11 @@ async def exchange(ctx, *, item : str):
 async def exchange_error(ctx,error):
     await ctx.message.add_reaction("❌")
     if isinstance(error, commands.CommandInvokeError):
-        await ctx.send(f"Uh Oh! Looks like {ctx.author.mention} haven't registered yet.")
+        await ctx.send(f"Uh Oh! Looks like {ctx.author.mention} haven't registered yet. Please register using `!apollo register`")
     else:
         await ctx.send("```Uh Oh! You need to define the item you want to exchange. Example of proper usage: \n\n!apollo exchange soup kettle token```")
 
-@client.command('guess')
+@client.command(name='guess',aliases=['answer'])
 async def guess(ctx, guess_answer, bet_amount):
     member = ctx.author
     bet_amount = int(bet_amount)
@@ -749,72 +754,77 @@ async def guess(ctx, guess_answer, bet_amount):
     player_coin = result_list[0]
 
     if (datetime.datetime.now() < max_card_games_reaction_time):
-        if (bet_amount <= player_coin):
-            if (last_card_games_name == "GTC"):
-                if (bet_amount <= 2000):
-                    if (guess_answer in ["red","black"]):
-                        if (guess_answer == last_card_games_answer):
-                            new_coins = bet_amount
+        if (bet_amount > 0):
+            if (bet_amount <= player_coin):
+                if (last_card_games_name == "GTC"):
+                    if (bet_amount <= 2000):
+                        if (guess_answer in ["red","black"]):
+                            if (guess_answer == last_card_games_answer):
+                                new_coins = bet_amount
+                            else:
+                                new_coins = -bet_amount
+                            await ctx.message.add_reaction("✅")
+                            query = "UPDATE players SET coins = coins + %s, last_card_game_answer = %s, last_card_game_bet = %s,last_card_game_answer_time = current_timestamp WHERE player_id = %s"
+                            data = (new_coins, guess_answer, abs(new_coins),member.id)
+                            cursor.execute(query,data)
+                            conn.commit()
+                            response = f"<@{member.id}> has locked their answer! Good Luck!"
                         else:
-                            new_coins = -bet_amount
-                        await ctx.message.add_reaction("✅")
-                        query = "UPDATE players SET coins = coins + %s, last_card_game_answer = %s, last_card_game_bet = %s,last_card_game_answer_time = current_timestamp WHERE player_id = %s"
-                        data = (new_coins, guess_answer, abs(new_coins),member.id)
-                        cursor.execute(query,data)
-                        conn.commit()
-                        response = f"<@{member.id}> has locked their answer! Good Luck!"
+                            await ctx.message.add_reaction("❌")
+                            response = f"<@{member.id}>'s answer must be black/red"
                     else:
                         await ctx.message.add_reaction("❌")
-                        response = f"<@{member.id}>'s answer must be black/red"
-                else:
-                    await ctx.message.add_reaction("❌")
-                    response = f"Sorry <@{member.id}>. You can only bet up to 1000"
-            elif (last_card_games_name == "PCC"):
-                if (bet_amount <= 4000):
-                    if (guess_answer in ["spade","club","diamond","heart"]):
-                        if (guess_answer == last_card_games_answer):
-                            new_coins = bet_amount
+                        response = f"Sorry <@{member.id}>. You can only bet up to 1000"
+                elif (last_card_games_name == "PCC"):
+                    if (bet_amount <= 4000):
+                        if (guess_answer in ["spade","club","diamond","heart"]):
+                            if (guess_answer == last_card_games_answer):
+                                new_coins = bet_amount
+                            else:
+                                new_coins = -bet_amount
+                            await ctx.message.add_reaction("✅")
+                            query = "UPDATE players SET coins = coins + %s, last_card_game_answer = %s, last_card_game_bet = %s, last_card_game_answer_time = current_timestamp WHERE player_id = %s"
+                            data = (new_coins, guess_answer, abs(new_coins), member.id)
+                            cursor.execute(query,data)
+                            conn.commit()
+                            response = f"<@{member.id}> has locked their answer! Good Luck!"
                         else:
-                            new_coins = -bet_amount
-                        await ctx.message.add_reaction("✅")
-                        query = "UPDATE players SET coins = coins + %s, last_card_game_answer = %s, last_card_game_bet = %s, last_card_game_answer_time = current_timestamp WHERE player_id = %s"
-                        data = (new_coins, guess_answer, abs(new_coins), member.id)
-                        cursor.execute(query,data)
-                        conn.commit()
-                        response = f"<@{member.id}> has locked their answer! Good Luck!"
+                            await ctx.message.add_reaction("❌")
+                            response = f"<@{member.id}>'s answer must be in spade/club/diamond/heart"
                     else:
                         await ctx.message.add_reaction("❌")
-                        response = f"<@{member.id}>'s answer must be in spade/club/diamond/heart"
-                else:
-                    await ctx.message.add_reaction("❌")
-                    response = f"Sorry <@{member.id}>. You can only bet up to 4000"
-            elif (last_card_games_name == "ACE"):
-                try:
-                    guess_answer = int(guess_answer)
-                except:
-                    await ctx.message.add_reaction("❌")
-                    response = f"<@{member.id}>'s answer must be between 1 and 10"
-                last_card_games_answer = int(last_card_games_answer)
-                if (bet_amount <= 500000):
-                    if guess_answer in range(1,11):
-                        if (guess_answer == last_card_games_answer):
-                            new_coins = bet_amount
-                        else:
-                            new_coins = -bet_amount
-                        await ctx.message.add_reaction("✅")
-                        query = "UPDATE players SET coins = coins + %s, last_card_game_answer = %s, last_card_game_bet = %s, last_card_game_answer_time = current_timestamp WHERE player_id = %s"
-                        data = (new_coins, guess_answer, abs(new_coins), member.id)
-                        cursor.execute(query,data)
-                        conn.commit()
-                        response = f"<@{member.id}> has locked their answer! Good Luck!"
-                    else:
+                        response = f"Sorry <@{member.id}>. You can only bet up to 4000"
+                elif (last_card_games_name == "ACE"):
+                    try:
+                        guess_answer = int(guess_answer)
+                    except:
                         await ctx.message.add_reaction("❌")
                         response = f"<@{member.id}>'s answer must be between 1 and 10"
-                else:
-                    await ctx.message.add_reaction("❌")
-                    response = f"Sorry <@{member.id}>. You can only bet up to 500000"
+                    last_card_games_answer = int(last_card_games_answer)
+                    if (bet_amount <= 500000):
+                        if guess_answer in range(1,11):
+                            if (guess_answer == last_card_games_answer):
+                                new_coins = bet_amount
+                            else:
+                                new_coins = -bet_amount
+                            await ctx.message.add_reaction("✅")
+                            query = "UPDATE players SET coins = coins + %s, last_card_game_answer = %s, last_card_game_bet = %s, last_card_game_answer_time = current_timestamp WHERE player_id = %s"
+                            data = (new_coins, guess_answer, abs(new_coins), member.id)
+                            cursor.execute(query,data)
+                            conn.commit()
+                            response = f"<@{member.id}> has locked their answer! Good Luck!"
+                        else:
+                            await ctx.message.add_reaction("❌")
+                            response = f"<@{member.id}>'s answer must be between 1 and 10"
+                    else:
+                        await ctx.message.add_reaction("❌")
+                        response = f"Sorry <@{member.id}>. You can only bet up to 500000"
+            else:
+                await ctx.message.add_reaction("❌")
+                response = f"<@{member.id}> doesn't have enough coins to bet!"
         else:
-            response = f"<@{member.id}> doesn't have enough coins to bet!"
+            await ctx.message.add_reaction("❌")
+            response = f"<@{member.id}> can't bet with negative amount of coins!"
     else:
         await ctx.message.add_reaction("❌")
         response = f"Time's up! <@{member.id}> was late to answer"
@@ -828,10 +838,9 @@ async def guess(ctx, guess_answer, bet_amount):
 async def guess_error(ctx, error):
     await ctx.message.add_reaction("❌")
     if isinstance(error, commands.CommandInvokeError):
-        await ctx.send(f"Uh Oh! Looks like {ctx.author.mention} haven't registered yet.")
+        await ctx.send(f"Uh Oh! Looks like {ctx.author.mention} haven't registered yet. Please register using `!apollo register`")
     else:
         await ctx.send(f"```Please input your answer and bet amount clearly. Example of proper usage: !apollo guess red 100```")
-        await ctx.send(error)
 
 @client.command(name='leaderboard',aliases=['rank'])
 async def leaderboard(ctx):
