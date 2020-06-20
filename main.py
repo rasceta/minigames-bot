@@ -526,7 +526,7 @@ async def items(ctx):
     player_coin = player_coin[0]
     player_answer_time = player_answer_time[0]
 
-    if datetime.datetime.now() > player_answer_time + datetime.timedelta(minutes=1):
+    if (player_answer_time == None) or (datetime.datetime.now() > player_answer_time + datetime.timedelta(minutes=1)):
         items_list = ["No Items"]
         try:
             query_items = "SELECT item_name FROM items where player_id = %s"
