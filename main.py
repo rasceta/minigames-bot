@@ -43,7 +43,7 @@ async def apollo_free_coins():
             channel = client.get_channel(channel_id)
             embed = discord.Embed(title="Free Coins",
                                 description=f"Hello, hello! The mysterious coin creature's here. It has returned for all to see! It's here to give you all free coins! Yes! You heard that right! Free coins!")
-            embed.set_thumbnail(url="https://media.discordapp.net/attachments/717658774265004052/720890485966766100/Bell_MK8.png")
+            embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717658774265004052/723924559446802502/coins2.png")
             embed.set_footer(text="React with the 👍 reaction! Quickly! I must go in 40 seconds!")
             new_message = await channel.send(embed=embed)
             await new_message.add_reaction("👍")
@@ -57,7 +57,8 @@ async def apollo_free_coins():
 
     embed = discord.Embed(title="Free Coins",
                         description="I must go now! Toodle doo~ I'll be back whenever!")
-    embed.set_thumbnail(url="https://media.discordapp.net/attachments/717658774265004052/720890485966766100/Bell_MK8.png")
+    embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717658774265004052/723924559446802502/coins2.png")
+    embed.set_footer(text="In the meantime! Please check out #community features!")
     await asyncio.sleep(40)
     for channel_id in free_coins_channel_id_list:
         if channel_id != None:
@@ -642,6 +643,12 @@ async def daily(ctx):
             await ctx.send(f"{ctx.author.mention}, you still have {hours} hour(s) {minutes} minute(s) and {seconds} second(s) before your next daily reward!")
     conn.commit()
     conn.close()
+
+@daily.error
+async def daily_error(ctx,error):
+    if isinstance(error, commands.CommandInvokeError):
+        await ctx.message.add_reaction("❌")
+        await ctx.send(f"{ctx.author.mention} you can't claim your daily rewards because you have not registered! Please type `!apollo register`")
 
 @commands.has_permissions(administrator=True)
 @client.command('reset_daily')
