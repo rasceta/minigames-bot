@@ -746,7 +746,7 @@ async def shop(ctx):
 async def purchase(ctx, *, item : str):
     member = ctx.author
     item = item.lower()
-    item_dict = {'soup kettle token':2000, 'foundation token':10000, 'heart token':15000}
+    item_dict = {'soup kettle token':4000, 'foundation token':12000, 'heart token':20000}
 
     conn = await get_conn()
     cursor = conn.cursor()
