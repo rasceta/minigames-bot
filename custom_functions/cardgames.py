@@ -3,7 +3,7 @@ import discord
 
 def get_random_card_game_name():
     number = random.randint(1,100)
-    if number <= 45:
+    if number <= 47:
         game = "GTC"
     elif number <= 80:
         game = "PCC"
