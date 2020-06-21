@@ -2,7 +2,13 @@ import random
 import discord
 
 def get_random_card_game_name():
-    game = random.choice(["GTC","PCC","ACE"])
+    number = random.randint(1,100)
+    if number <= 45:
+        game = "GTC"
+    elif number <= 80:
+        game = "PCC"
+    elif number <= 100:
+        game = "ACE"
     return game
 
 def get_card_game_intro(game_name):
