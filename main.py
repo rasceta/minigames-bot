@@ -736,9 +736,9 @@ async def shop(ctx):
     embed = discord.Embed(  title="Apollo's Shop",
                             description="Welcome to Apollo's Shop! You can purchase any of these items by typing `!apollo purchase <item>`",
                             color=discord.Color.green())
-    embed.add_field(name="**🍲Soup Kettle Token🍲**. Can be traded for a soup Kettle. Which you can then turn in the soup kettle for bells. Each soup kettle when given to a treasurer is worth 99,000 Bells", value="Price: 💰2.000",inline=False)
-    embed.add_field(name="**🔴Foundation Token🔴**. Worth 1 stack of anything from the dodo code",value="Price: 💰10.000",inline=True)
-    embed.add_field(name="**♥Heart Token♥**. Worth 3 stacks of anything from the dodo code",value="Price: 💰15.000")
+    embed.add_field(name="**🍲Soup Kettle Token🍲**. Can be traded for a soup Kettle. Which you can then turn in the soup kettle for bells. Each soup kettle when given to a treasurer is worth 99,000 Bells", value="Price: 💰4.000",inline=False)
+    embed.add_field(name="**🔴Foundation Token🔴**. Worth 1 stack of anything from the dodo code",value="Price: 💰12.000",inline=True)
+    embed.add_field(name="**♥Heart Token♥**. Worth 3 stacks of anything from the dodo code",value="Price: 💰20.000")
 
     await ctx.send(embed=embed)
 
@@ -972,7 +972,7 @@ async def leaderboard(ctx):
     
     embed = discord.Embed(title="**Apollo Games Leaderboard**", color=discord.Color.blue(),
                           description=response)
-    embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717658774265004052/720890485966766100/Bell_MK8.png")
+    embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717658774265004052/723924559446802502/coins2.png")
 
     await ctx.send(f"Alright {ctx.author.mention} please wait one minute while I tally the results...")
     await asyncio.sleep(70)
