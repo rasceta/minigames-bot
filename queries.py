@@ -58,10 +58,26 @@ CREATE TABLE IF NOT EXISTS public.servers (
 	created_at TIMESTAMP,
 	last_modified_at TIMESTAMP
 );
-    '''
+'''
+    query_count = '''
+CREATE TABLE IF NOT EXISTS public.count_game (
+	server_id BIGINT PRIMARY KEY,
+	count_game_channel_id BIGINT,
+	last_count_number INT,
+	last_count_member_id BIGINT,
+	last_count_message_id BIGINT,
+	last_count_status TEXT,
+	last_count_fee INT,
+	total_fee INT,
+	created_at TIMESTAMP,
+	last_modified_at TIMESTAMP
+);
+'''
     cursor = conn.cursor()
     cursor.execute(query_players)
     cursor.execute(query_items)
     cursor.execute(query_servers)
+    cursor.execute(query_count)
     conn.commit()
+    conn.close()
     print(f"Database created and Successfully Connected to PostgreSQL")
