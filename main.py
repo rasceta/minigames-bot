@@ -566,7 +566,7 @@ async def shop(ctx):
     embed.add_field(name="**🍲Soup Kettle Token🍲**. Can be traded for a soup Kettle. Which you can then turn in the soup kettle for bells. Each soup kettle when given to a treasurer is worth 99,000 Bells", value="Price: 💰4.000",inline=False)
     embed.add_field(name="**🔴Foundation Token🔴**. Worth 1 stack of anything from the dodo code",value="Price: 💰12.000",inline=True)
     embed.add_field(name="**♥Heart Token♥**. Worth 3 stacks of anything from the dodo code",value="Price: 💰20.000")
-    embed.set_footer(text="If you want to turn in your items! Please use `!apollo exchange <items>, <dodo code>`. **Please be sure to open your island before turning in a token!**")
+    embed.add_field(name="Notes",value="If you want to turn in your items! Please use `!apollo exchange <items>, <dodo code>`. **Please be sure to open your island before turning in a token!**",inline=False)
 
     await ctx.send(embed=embed)
 
