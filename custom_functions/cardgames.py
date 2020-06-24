@@ -39,7 +39,7 @@ May lady luck be on your side!
         title = "**Ace in the hole**"
         description = '''The time has come! **Ace in the hole!**
 
-One of out of these ten cards is an **Ace!** You have a **1 in 10** chance of winning! Be wary of how much you bet! **You can bet up to 500.000 amount of coins!**!
+One of out of these ten cards is an **Ace!** You have a **1 in 10** chance of winning! Be wary of how much you bet! **You can bet up to 20.000 amount of coins!**!
 Please enter `!apollo guess [1 to 10] <bet amount>` to participate! Place your bets everyone! **Place your bets!**
 
 May luck be on your side! Have at it!

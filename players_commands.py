@@ -173,8 +173,8 @@ async def get_guess_response(ctx, conn, member, guess_answer, bet_amount):
     player_coin = result_list[0]
 
     if (datetime.datetime.now() < max_card_games_reaction_time):
-        if (bet_amount > 0):
-            if (bet_amount <= player_coin):
+        if (bet_amount <= player_coin):
+            if (bet_amount > 0):
                 if (last_card_games_name == "GTC"):
                     if (bet_amount <= 2000):
                         if (guess_answer in ["red","black"]):
@@ -183,7 +183,7 @@ async def get_guess_response(ctx, conn, member, guess_answer, bet_amount):
                             else:
                                 new_coins = -bet_amount
                             await ctx.message.add_reaction("✅")
-                            query = "UPDATE players SET coins = coins + %s, last_card_game_answer = %s, last_card_game_bet = %s,last_card_game_answer_time = current_timestamp WHERE player_id = %s"
+                            query = "UPDATE players SET coins = coins + %s, last_card_game_answer = %s, last_card_game_bet = %s,last_card_game_answer_time = current_timestamp, last_modified_at = current_timestamp WHERE player_id = %s"
                             data = (new_coins, guess_answer, abs(new_coins),member.id)
                             cursor.execute(query,data)
                             conn.commit()
@@ -202,7 +202,7 @@ async def get_guess_response(ctx, conn, member, guess_answer, bet_amount):
                             else:
                                 new_coins = -bet_amount
                             await ctx.message.add_reaction("✅")
-                            query = "UPDATE players SET coins = coins + %s, last_card_game_answer = %s, last_card_game_bet = %s, last_card_game_answer_time = current_timestamp WHERE player_id = %s"
+                            query = "UPDATE players SET coins = coins + %s, last_card_game_answer = %s, last_card_game_bet = %s, last_card_game_answer_time = current_timestamp, last_modified_at = current_timestamp WHERE player_id = %s"
                             data = (new_coins, guess_answer, abs(new_coins), member.id)
                             cursor.execute(query,data)
                             conn.commit()
@@ -220,14 +220,14 @@ async def get_guess_response(ctx, conn, member, guess_answer, bet_amount):
                         await ctx.message.add_reaction("❌")
                         response = f"<@{member.id}>'s answer must be between 1 and 10"
                     last_card_games_answer = int(last_card_games_answer)
-                    if (bet_amount <= 50000):
+                    if (bet_amount <= 20000):
                         if guess_answer in range(1,11):
                             if (guess_answer == last_card_games_answer):
-                                new_coins = bet_amount * 4
+                                new_coins = bet_amount * 3
                             else:
                                 new_coins = -bet_amount
                             await ctx.message.add_reaction("✅")
-                            query = "UPDATE players SET coins = coins + %s, last_card_game_answer = %s, last_card_game_bet = %s, last_card_game_answer_time = current_timestamp WHERE player_id = %s"
+                            query = "UPDATE players SET coins = coins + %s, last_card_game_answer = %s, last_card_game_bet = %s, last_card_game_answer_time = current_timestamp, last_modified_at = current_timestamp WHERE player_id = %s"
                             data = (new_coins, guess_answer, abs(bet_amount), member.id)
                             cursor.execute(query,data)
                             conn.commit()
@@ -237,13 +237,13 @@ async def get_guess_response(ctx, conn, member, guess_answer, bet_amount):
                             response = f"<@{member.id}>'s answer must be between 1 and 10"
                     else:
                         await ctx.message.add_reaction("❌")
-                        response = f"Sorry <@{member.id}>. You can only bet up to 50000"
+                        response = f"Sorry <@{member.id}>. You can only bet up to 20000"
             else:
                 await ctx.message.add_reaction("❌")
-                response = f"<@{member.id}> doesn't have enough coins to bet!"
+                response = f"<@{member.id}> can't bet with negative amount of coins!"
         else:
             await ctx.message.add_reaction("❌")
-            response = f"<@{member.id}> can't bet with negative amount of coins!"
+            response = f"<@{member.id}> doesn't have enough coins to bet!"
     else:
         await ctx.message.add_reaction("❌")
         response = f"Time's up! <@{member.id}> was late to answer"

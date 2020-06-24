@@ -1,5 +1,5 @@
 *.json
 .env
 *.pyc
-__pycache__/
-custom_functions/__pycache__/
+./__pycache__/
+./custom_functions/__pycache__/

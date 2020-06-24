@@ -126,7 +126,7 @@ async def apollo_card_games():
                 if players_won == "No Winners":
                     players_won = ""
                 if game_name == "ACE":
-                    players_won = players_won + f"\n**{player_name[i]}** won **{player_bets[i]*5}**"
+                    players_won = players_won + f"\n**{player_name[i]}** won **{player_bets[i]*4}**"
                 else:
                     players_won = players_won + f"\n**{player_name[i]}** won **{player_bets[i]*2}**"
 
@@ -184,8 +184,13 @@ async def on_raw_reaction_add(payload):
             time_now = datetime.datetime.now()
             if time_now <= max_reaction_time:
                 if payload.emoji.name == '👍':
+                    random_num = random.randint(1,10)
+                    if random_num in range (1,10):
+                        coin = 200
+                    else:
+                        coin = 1000
                     query = "UPDATE players SET coins = coins + %s WHERE player_id = %s"
-                    data = (200,user_id)
+                    data = (coin,user_id)
                     cursor.execute(query,data)
                     conn.commit()
                     conn.close()
@@ -238,8 +243,8 @@ async def on_message(message):
         query_insert = "INSERT INTO count_game(server_id, last_count_status, created_at, last_modified_at) VALUES(%s,%s,%s,%s)"
         data_insert = (message.guild.id, 'good', datetime.datetime.now(), datetime.datetime.now())
         cursor.execute(query_insert,data_insert)
-    except Exception as e:
-        print(e)
+    except :
+        pass
     conn.commit()
     # query_count = "SELECT count_game_channel_id, last_count_number, last_count_member_id, last_count_status from count_game where server_id = %s"
     # data_count = (message.guild.id, )
@@ -291,6 +296,7 @@ async def on_message(message):
     #     query = "UPDATE count_game SET last_count_number = 0, last_count_member_id = %s, last_count_status = 'good', last_modified_at = current_timestamp where server_id = %s"
     #     data = (message.author.id, message.guild.id)
     #     cursor.execute(query,data)
+    # conn.commit()
     conn.close()
     await client.process_commands(message)
 
@@ -316,8 +322,8 @@ async def set_channel(ctx, alias, channel: discord.TextChannel):
             query = "UPDATE servers SET slot_game_channel_id = %s WHERE server_id = %s"
         elif alias == 'count':
             query = "UPDATE servers SET count_game_channel_id = %s WHERE server_id = %s"
-            query_update = "UPDATE count_game SET count_game_channel_id = %s WHERE server_id = %s"
-            data_update = (channel.id, ctx.guild.id)
+            query_update = "UPDATE count_game SET count_game_channel_id = %s, last_count_number = %s, last_count_status = %s WHERE server_id = %s"
+            data_update = (channel.id, 0, "good", ctx.guild.id)
             cursor.execute(query_update, data_update)
             conn.commit()
         data = (channel.id, ctx.guild.id)
@@ -351,22 +357,24 @@ async def query(ctx, *, query : str):
 @commands.has_permissions(administrator=True)
 @client.command('start')
 async def start(ctx, *, task_name: str):
-    if task_name == "card":
-        apollo_card_games.start()
-    elif task_name == "coins":
-        apollo_free_coins.start()
-    await ctx.message.add_reaction("✅")
-    await ctx.author.send(f"{task_name} has successfully started.")
+    if task_name in ['card','coins']:
+        if task_name == "card":
+            apollo_card_games.start()
+        elif task_name == "coins":
+            apollo_free_coins.start()
+        await ctx.message.add_reaction("✅")
+        await ctx.author.send(f"{task_name} has successfully started.")
 
 @commands.has_permissions(administrator=True)
 @client.command('stop')
 async def stop(ctx, *, task_name: str):
-    if task_name == "card":
-        apollo_card_games.stop()
-    elif task_name == "coins":
-        apollo_free_coins.stop()
-    await ctx.message.add_reaction("✅")
-    await ctx.author.send(f"{task_name} has successfully stopped.")
+    if task_name in ['card','coins']:
+        if task_name == "card":
+            apollo_card_games.stop()
+        elif task_name == "coins":
+            apollo_free_coins.stop()
+        await ctx.message.add_reaction("✅")
+        await ctx.author.send(f"{task_name} has successfully stopped.")
 
 @commands.has_role('Game Master')
 @client.command('add_coins')
@@ -558,6 +566,7 @@ async def shop(ctx):
     embed.add_field(name="**🍲Soup Kettle Token🍲**. Can be traded for a soup Kettle. Which you can then turn in the soup kettle for bells. Each soup kettle when given to a treasurer is worth 99,000 Bells", value="Price: 💰4.000",inline=False)
     embed.add_field(name="**🔴Foundation Token🔴**. Worth 1 stack of anything from the dodo code",value="Price: 💰12.000",inline=True)
     embed.add_field(name="**♥Heart Token♥**. Worth 3 stacks of anything from the dodo code",value="Price: 💰20.000")
+    embed.set_footer(text="If you want to turn in your items! Please use `!apollo exchange <items>, <dodo code>`. **Please be sure to open your island before turning in a token!**")
 
     await ctx.send(embed=embed)
 
@@ -671,7 +680,7 @@ async def guess(ctx, guess_answer, bet_amount):
 
     conn = await get_conn()
     
-    if bet_amount > 0:
+    if bet_amount >= 0:
         response = await get_guess_response(ctx,conn,member,guess_answer,bet_amount)
     else:
         await ctx.message.add_reaction("❌")
