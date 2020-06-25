@@ -246,7 +246,7 @@ async def on_message(message):
     except :
         pass
     conn.commit()
-    # query_count = "SELECT count_game_channel_id, last_count_number, last_count_member_id, last_count_status from count_game where server_id = %s"
+    # query_count = "SELECT count_game_channel_id, last_count_number, last_count_member_id, last_count_status, last_count_fee from count_game where server_id = %s"
     # data_count = (message.guild.id, )
     # cursor.execute(query_count,data_count)
     # result = cursor.fetchall()
@@ -255,6 +255,7 @@ async def on_message(message):
     #     last_count_number = result[0][1]
     #     last_count_member_id = result[0][2]
     #     last_count_status = result[0][3]
+    #     last_count_fee = result[0][4]
     #     try:
     #         content = int(message.content)
     #         if (message.channel.id == count_game_channel_id):
@@ -268,18 +269,27 @@ async def on_message(message):
     #                         else:
     #                             print('same member')
     #                             await message.add_reaction("❌")
+    #                             await message.add_reaction("💲")
+    #                             await message.add_reaction("1️⃣")
+    #                             await message.channel.send(f"Uh Oh! {message.author.mention} just ruined the game. You have 1 minute to react with 💲 to pay {last_count_fee} to continue the game or react with 1️⃣ to restart from 1")
     #                             query = "UPDATE count_game SET last_count_number = %s, last_count_member_id = %s, last_count_message_id = %s, last_count_status = %s, last_modified_at = current_timestamp where server_id = %s"
     #                             data = (content, message.author.id, message.id, "bad", message.guild.id)
     #                             cursor.execute(query,data)
     #                     else:
     #                         print('wrong number')
     #                         await message.add_reaction("❌")
+    #                         await message.add_reaction("💲")
+    #                         await message.add_reaction("1️⃣")
+    #                         await message.channel.send(f"Uh Oh! {message.author.mention} just ruined the game. You have 1 minute to react with 💲 to pay {last_count_fee} to continue the game or react with 1️⃣ to restart from 1")
     #                         query = "UPDATE count_game SET last_count_number = %s, last_count_member_id = %s, last_count_message_id = %s, last_count_status = %s, last_modified_at = current_timestamp where server_id = %s"
     #                         data = (content, message.author.id, message.id, "bad", message.guild.id)
     #                         cursor.execute(query,data)
     #                 else:
     #                     print('not int')
     #                     await message.add_reaction("❌")
+    #                     await message.add_reaction("💲")
+    #                     await message.add_reaction("1️⃣")
+    #                     await message.channel.send(f"Uh Oh! {message.author.mention} just ruined the game. You have 1 minute to react with 💲 to pay {last_count_fee} to continue the game or react with 1️⃣ to restart from 1")
     #                     query = "UPDATE count_game SET last_count_number = %s, last_count_member_id = %s, last_count_message_id = %s, last_count_status = %s, last_modified_at = current_timestamp where server_id = %s"
     #                     data = (content, message.author.id, message.id, "bad", message.guild.id)
     #                     cursor.execute(query,data)
@@ -498,7 +508,7 @@ async def daily(ctx):
 
     if isinstance(next_daily_coins, datetime.datetime):
         if (datetime.datetime.now () > next_daily_coins):
-            if discord.utils.get(member.roles, name="💎Giver💎") is not None:
+            if discord.utils.get(member.roles, name="Giver") is not None:
                 free_coins = 10000
             elif discord.utils.get(member.roles, name="🔰 Donor 🔰") is not None:
                 free_coins = 1500
