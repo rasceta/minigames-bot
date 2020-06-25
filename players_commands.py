@@ -152,7 +152,7 @@ async def get_donate_response(ctx, conn, donater, member, donation_amount):
             response = f"Uh oh! <@{member.id}> cannot donate more than 50.000 coins!"
     else:
         await ctx.message.add_reaction("❌")
-        response = f"Uh oh! <@{member.id}> doesn't seem to have coins that much!"
+        response = f"Uh oh! <@{member.id}> doesn't seem to have that much coins!"
     return response
 
 async def get_guess_response(ctx, conn, member, guess_answer, bet_amount):
