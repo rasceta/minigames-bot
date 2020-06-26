@@ -428,6 +428,7 @@ async def set_channel(ctx, alias, channel: discord.TextChannel):
         conn.commit()
         conn.close()
         await ctx.message.add_reaction("✅")
+        print(f"Updated {alias} channel (set_channel)")
         await ctx.send(f"You have set {channel.mention} as `{alias} Channel`")
     else:
         await ctx.message.add_reaction("❌")
@@ -457,8 +458,9 @@ async def start_count(ctx, channel : discord.TextChannel):
         query_update = "UPDATE count_game SET count_game_channel_id = %s, last_count_member_id = 1, last_count_number = %s, last_count_status = %s, last_count_fee = 300, total_fee = 0, last_modified_at = current_timestamp WHERE server_id = %s"
         data_update = (channel.id, 0, "good", ctx.guild.id)
         cursor.execute(query_update, data_update)
-        print("Updated channel count")
     conn.commit()
+    await ctx.message.add_reaction("✅")
+    print("Updated channel count (start_count)")
     embed = discord.Embed(title="Apollo's Chain Counting Game", description="Alright! Let's start all over again!")
     embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717658774265004052/726063162364919818/nf67.png")
     await channel.send(embed=embed)
@@ -470,6 +472,26 @@ async def start_count_error(ctx,error):
         response = f"```You need to define #channel you want to use for counting game. Example of proper usage:\n\n!apollo start_channel #apollo-count```"
     else:
         response = error
+    await ctx.send(response)
+
+@commands.has_permissions(administrator=True)
+@client.command('stop_count')
+async def stop_count(ctx):
+    conn = await get_conn()
+    cursor = conn.cursor()
+    query = "UPDATE servers SET count_game_channel_id = %s WHERE server_id = %s"
+    cursor.execute(query,(1, ctx.guild.id))
+    conn.commit()
+    try: # insert new row into count_game if not exist
+        query_update = "UPDATE count_game SET count_game_channel_id = %s WHERE server_id = %s"
+        data_update = (1, ctx.guild.id)
+        cursor.execute(query_update, data_update)
+        conn.commit()
+        print("Updated channel count (stop_count)")
+        response = f"```You have successfully stopped current chain counting game```"
+    except:
+        response = f"```You haven't set a channel as count channel```"
+    
     await ctx.send(response)
 
 @commands.has_permissions(administrator=True)
@@ -630,7 +652,7 @@ async def daily(ctx):
         if (datetime.datetime.now () > next_daily_coins):
             if discord.utils.get(member.roles, name="Giver") is not None:
                 free_coins = 10000
-            elif discord.utils.get(member.roles, name="🔰 Donor 🔰") is not None:
+            elif discord.utils.get(member.roles, name="Donor") is not None:
                 free_coins = 1500
             elif discord.utils.get(member.roles, name="Members") is not None:
                 free_coins = 400
