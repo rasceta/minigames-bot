@@ -22,6 +22,12 @@ async def get_items_response(conn, member):
         items_list = [e[0] for e in result]
         if items_list == []:
             items_list = ["No Items"]
+            item_response = ', '.join(items_list)
+        else:
+            item_response = ""
+            unique_items = list(set(items_list))
+            for i in unique_items:
+                item_response = item_response + f"{i} ({items_list.count(i)})\n"
     except:
         pass
     conn.close()
@@ -31,7 +37,7 @@ async def get_items_response(conn, member):
     embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717658774265004052/723924559446802502/coins2.png")
     embed.add_field(name="Name", value=member.name, inline=False)
     embed.add_field(name="💰Coins", value=player_coin, inline=False)
-    embed.add_field(name="🎒Items", value=", ".join(items_list), inline=False)
+    embed.add_field(name="🎒Items", value=item_response, inline=False)
     return embed
 
 async def get_slot_response(ctx, conn, member, slot, stars_count, bet_amount):

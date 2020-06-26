@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS public.servers (
 	exchange_channel_id BIGINT,
 	free_coins_channel_id BIGINT,
 	bot_channel_id BIGINT,
+	free_coins_amount INT,
 	last_free_coins_message_id BIGINT,
 	max_free_coins_reaction_time TIMESTAMP,
 	last_card_games_name TEXT,
@@ -68,6 +69,7 @@ CREATE TABLE IF NOT EXISTS public.count_game (
 	last_count_message_id BIGINT,
 	last_count_status TEXT,
 	last_count_fee INT,
+	last_count_member_pay TEXT,
 	total_fee INT,
 	created_at TIMESTAMP,
 	last_modified_at TIMESTAMP

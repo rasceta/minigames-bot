@@ -44,16 +44,24 @@ async def apollo_free_coins():
     for channel_id in free_coins_channel_id_list:
         if channel_id != None:
             channel = client.get_channel(channel_id)
+
+            rand_num = random.randint(1,10)
+            if rand_num <= 8:
+                free_coins_amount = 200
+                img_url = "https://cdn.discordapp.com/attachments/717658774265004052/723924559446802502/coins2.png"
+            else:
+                free_coins_amount = 1000
+                img_url = "https://cdn.discordapp.com/attachments/717658774265004052/726036484657774603/coins3.png"
             embed = discord.Embed(title="Free Coins",
                                 description=f"Hello, hello! The mysterious coin creature's here. It has returned for all to see! It's here to give you all free coins! Yes! You heard that right! Free coins!")
-            embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717658774265004052/723924559446802502/coins2.png")
+            embed.set_thumbnail(url=img_url)
             embed.set_footer(text="React with the 👍 reaction! Quickly! I must go in 40 seconds!")
             new_message = await channel.send(embed=embed)
             await new_message.add_reaction("👍")
             max_reaction_time = datetime.datetime.now() + datetime.timedelta(seconds=40)
 
-            query = "UPDATE servers SET last_free_coins_message_id = %s, max_free_coins_reaction_time = %s WHERE free_coins_channel_id = %s"
-            data = (new_message.id, max_reaction_time, channel_id)
+            query = "UPDATE servers SET last_free_coins_message_id = %s, max_free_coins_reaction_time = %s, free_coins_amount = %s WHERE free_coins_channel_id = %s"
+            data = (new_message.id, max_reaction_time, free_coins_amount, channel_id)
             cursor.execute(query,data)
             conn.commit()
             conn.close()
@@ -170,34 +178,106 @@ async def on_raw_reaction_add(payload):
     user_id = payload.user_id
     message_id = payload.message_id
     guild_id = payload.guild_id
+    channel_id = payload.channel_id
+    channel = client.get_channel(channel_id)
 
     conn = await get_conn()
     cursor = conn.cursor()
-    query = "SELECT last_free_coins_message_id, max_free_coins_reaction_time from servers WHERE server_id = %s"
+    query = "SELECT last_free_coins_message_id, max_free_coins_reaction_time, free_coins_amount from servers WHERE server_id = %s"
     data = (guild_id,)
     cursor.execute(query,data)
     result = cursor.fetchall()
     last_message_id = result[0][0]
     max_reaction_time = result[0][1]
+    free_coins_amount = result[0][2]
     try:
         if (message_id == last_message_id) and (user_id != 721001236589183070):
             time_now = datetime.datetime.now()
             if time_now <= max_reaction_time:
                 if payload.emoji.name == '👍':
-                    random_num = random.randint(1,10)
-                    if random_num in range (1,10):
-                        coin = 200
-                    else:
-                        coin = 1000
                     query = "UPDATE players SET coins = coins + %s WHERE player_id = %s"
-                    data = (coin,user_id)
+                    data = (free_coins_amount,user_id)
                     cursor.execute(query,data)
                     conn.commit()
-                    conn.close()
             else:
                 pass
     except:
         print('Max free coins reaction time is not set')
+
+    query_last_count = "SELECT last_count_member_id, last_count_message_id, last_count_fee, last_count_status, last_count_member_pay FROM count_game WHERE server_id = %s"
+    cursor.execute(query_last_count, (guild_id,))
+    result = cursor.fetchall()
+    last_count_member_id = result[0][0]
+    last_count_message_id = result[0][1]
+    last_count_fee = result[0][2]
+    last_count_status = result[0][3]
+    last_count_member_pay = result[0][4]
+    print(last_count_member_id, ' ', last_count_message_id, ' ', last_count_fee)
+
+    try:
+        query_coin = "SELECT coins FROM players WHERE player_id = %s"
+        cursor.execute(query_coin, (user_id,))
+        result = cursor.fetchall()
+        player_coin = result[0][0]
+    except:
+        player_coin = 0
+
+    try:
+        if message_id == last_count_message_id:
+            if user_id == last_count_member_id:
+                if last_count_status == "bad":
+                    if payload.emoji.name == "💰":
+                        if player_coin == 0 or player_coin < last_count_fee:
+                            response = f"It seems {payload.member.mention} doesn't have enough coins! If somebody else wants to pay the fee, please react with 💰 on their message!"
+                            query_update_count = "UPDATE count_game SET last_count_member_pay = %s, last_modified_at = current_timestamp WHERE server_id = %s"
+                            data_update_count = ("N", guild_id)
+                            cursor.execute(query_update_count, data_update_count)
+                            conn.commit()
+                        else:
+                            query_update_player = "UPDATE players SET coins = coins - %s, last_modified_at = current_timestamp WHERE player_id = %s"
+                            data_update_player = (last_count_fee, user_id)
+                            query_update_count = "UPDATE count_game SET last_count_status = %s, last_count_fee = last_count_fee * 2, total_fee = total_fee + last_count_fee, last_modified_at = current_timestamp WHERE server_id = %s"
+                            data_update_count = ("good", guild_id)
+                            cursor.execute(query_update_player, data_update_player)
+                            conn.commit()
+                            cursor.execute(query_update_count, data_update_count)
+                            conn.commit()
+                            response = f"{payload.member.mention} choosed to pay with his coins and now the count is continued!"
+                            print('continue count')
+                    elif payload.emoji.name == "🔁":
+                        query_update_count = "UPDATE count_game SET last_count_number = 0, last_count_status = %s, last_count_fee = last_count_fee * 2, total_fee = total_fee + last_count_fee, last_modified_at = current_timestamp WHERE server_id = %s"
+                        data_update_count = ("good", guild_id)
+                        cursor.execute(query_update_count, data_update_count)
+                        conn.commit()
+                        response = f"{payload.member.mention} choosed to start all over again from 1 !"
+                        print('restart count')
+            elif last_count_member_pay == "N":
+                if player_coin == 0 or player_coin < last_count_fee:
+                    response = f"Uh oh, well, it seems {payload.member.mention} also doesn't have enough money! Oh well! We'll just have to start from 1! Have fun!"
+                    query_update_count = "UPDATE count_game SET last_count_number = 0, last_count_status = %s, last_count_fee = 300, last_count_member_pay = %s, last_modified_at = current_timestamp WHERE server_id = %s"
+                    data_update_count = ("good", "Y", guild_id)
+                    cursor.execute(query_update_count, data_update_count)
+                    conn.commit()
+                    print('restart count')
+                else:
+                    query_update_player = "UPDATE players SET coins = coins - %s, last_modified_at = current_timestamp WHERE player_id = %s"
+                    data_update_player = (last_count_fee, user_id)
+                    query_update_count = "UPDATE count_game SET last_count_status = %s, last_count_fee = last_count_fee * 2, total_fee = total_fee + last_count_fee, last_modified_at = current_timestamp WHERE server_id = %s"
+                    data_update_count = ("good", guild_id)
+                    cursor.execute(query_update_player, data_update_player)
+                    conn.commit()
+                    cursor.execute(query_update_count, data_update_count)
+                    conn.commit()
+                    response = f"{payload.member.mention} choosed to pay with his coins and now the count is now continued!"
+                    print('continue count')
+            embed = discord.Embed(title="Apollo's Chain Counting Game", description=response)
+            embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717658774265004052/726063162364919818/nf67.png")
+            await channel.send(embed=embed)
+    except Exception as e:
+        print(e)
+
+
+    conn.close()
 
 @client.event
 async def on_raw_reaction_remove(payload):
@@ -207,19 +287,20 @@ async def on_raw_reaction_remove(payload):
 
     conn = await get_conn()
     cursor = conn.cursor()
-    query = "SELECT last_free_coins_message_id, max_free_coins_reaction_time from servers WHERE server_id = %s"
+    query = "SELECT last_free_coins_message_id, max_free_coins_reaction_time, free_coins_amount from servers WHERE server_id = %s"
     data = (guild_id,)
     cursor.execute(query,data)
     result = cursor.fetchall()
     last_message_id = result[0][0]
     max_reaction_time = result[0][1]
+    free_coins_amount = result[0][2]
     try:
         if message_id == last_message_id:
             time_now = datetime.datetime.now()
             if time_now <= max_reaction_time:
                 if payload.emoji.name == '👍':
                     query = "UPDATE players SET coins = coins - %s WHERE player_id = %s"
-                    data = (200,user_id)
+                    data = (free_coins_amount,user_id)
                     cursor.execute(query,data)
                     conn.commit()
                     conn.close()
@@ -239,74 +320,79 @@ async def on_message(message):
     except:
         pass
     conn.commit()
-    try: # insert new row into count_game if not exist
-        query_insert = "INSERT INTO count_game(server_id, last_count_status, created_at, last_modified_at) VALUES(%s,%s,%s,%s)"
-        data_insert = (message.guild.id, 'good', datetime.datetime.now(), datetime.datetime.now())
-        cursor.execute(query_insert,data_insert)
-    except :
-        pass
-    conn.commit()
-    # query_count = "SELECT count_game_channel_id, last_count_number, last_count_member_id, last_count_status, last_count_fee from count_game where server_id = %s"
-    # data_count = (message.guild.id, )
-    # cursor.execute(query_count,data_count)
-    # result = cursor.fetchall()
-    # try:
-    #     count_game_channel_id = result[0][0]
-    #     last_count_number = result[0][1]
-    #     last_count_member_id = result[0][2]
-    #     last_count_status = result[0][3]
-    #     last_count_fee = result[0][4]
-    #     try:
-    #         content = int(message.content)
-    #         if (message.channel.id == count_game_channel_id):
-    #             if last_count_status == 'good':
-    #                 if isinstance(content, int):
-    #                     if content == last_count_number + 1:
-    #                         if message.author.id != last_count_member_id:
-    #                             query = "UPDATE count_game SET last_count_number = %s, last_count_member_id = %s, last_modified_at = current_timestamp where server_id = %s"
-    #                             data = (content, message.author.id, message.guild.id)
-    #                             cursor.execute(query,data)
-    #                         else:
-    #                             print('same member')
-    #                             await message.add_reaction("❌")
-    #                             await message.add_reaction("💲")
-    #                             await message.add_reaction("1️⃣")
-    #                             await message.channel.send(f"Uh Oh! {message.author.mention} just ruined the game. You have 1 minute to react with 💲 to pay {last_count_fee} to continue the game or react with 1️⃣ to restart from 1")
-    #                             query = "UPDATE count_game SET last_count_number = %s, last_count_member_id = %s, last_count_message_id = %s, last_count_status = %s, last_modified_at = current_timestamp where server_id = %s"
-    #                             data = (content, message.author.id, message.id, "bad", message.guild.id)
-    #                             cursor.execute(query,data)
-    #                     else:
-    #                         print('wrong number')
-    #                         await message.add_reaction("❌")
-    #                         await message.add_reaction("💲")
-    #                         await message.add_reaction("1️⃣")
-    #                         await message.channel.send(f"Uh Oh! {message.author.mention} just ruined the game. You have 1 minute to react with 💲 to pay {last_count_fee} to continue the game or react with 1️⃣ to restart from 1")
-    #                         query = "UPDATE count_game SET last_count_number = %s, last_count_member_id = %s, last_count_message_id = %s, last_count_status = %s, last_modified_at = current_timestamp where server_id = %s"
-    #                         data = (content, message.author.id, message.id, "bad", message.guild.id)
-    #                         cursor.execute(query,data)
-    #                 else:
-    #                     print('not int')
-    #                     await message.add_reaction("❌")
-    #                     await message.add_reaction("💲")
-    #                     await message.add_reaction("1️⃣")
-    #                     await message.channel.send(f"Uh Oh! {message.author.mention} just ruined the game. You have 1 minute to react with 💲 to pay {last_count_fee} to continue the game or react with 1️⃣ to restart from 1")
-    #                     query = "UPDATE count_game SET last_count_number = %s, last_count_member_id = %s, last_count_message_id = %s, last_count_status = %s, last_modified_at = current_timestamp where server_id = %s"
-    #                     data = (content, message.author.id, message.id, "bad", message.guild.id)
-    #                     cursor.execute(query,data)
-    #             else:
-    #                 print('status bad')
-    #                 await message.add_reaction("❌")
-    #                 await message.delete()
-    #     except:
-    #         await message.add_reaction("❌")
-    #         query = "UPDATE count_game SET last_count_member_id = %s, last_count_message_id = %s, last_count_status = %s, last_modified_at = current_timestamp where server_id = %s"
-    #         data = (message.author.id, message.id, "bad", message.guild.id)
-    #         cursor.execute(query,data)
-    # except: 
-    #     query = "UPDATE count_game SET last_count_number = 0, last_count_member_id = %s, last_count_status = 'good', last_modified_at = current_timestamp where server_id = %s"
-    #     data = (message.author.id, message.guild.id)
-    #     cursor.execute(query,data)
-    # conn.commit()
+
+    try:
+        query_count = "SELECT count_game_channel_id, last_count_number, last_count_member_id, last_count_status, last_count_fee from count_game where server_id = %s"
+        data_count = (message.guild.id, )
+        cursor.execute(query_count,data_count)
+        result = cursor.fetchall()
+        count_game_channel_id = result[0][0]
+        last_count_number = result[0][1]
+        last_count_member_id = result[0][2]
+        last_count_status = result[0][3]
+        last_count_fee = result[0][4]
+        print(result)
+        try:
+            content = int(message.content)
+        except:
+            content = ""
+        if (message.channel.id == count_game_channel_id) and (message.author.bot is False):
+            if last_count_status == 'good':
+                if isinstance(content, int):
+                    if content == last_count_number + 1:
+                        if message.author.id != last_count_member_id:
+                            await message.add_reaction("✅")
+                            if (last_count_number + 1) % 1000 == 0:
+                                coins = 40000
+                                response = f"Awesome! **{last_count_number + 1}** ! Here's {int(coins)} coins for you, {message.author.mention}"
+                            elif (last_count_number + 1) % 500 == 0:
+                                coins = 20000
+                                response = f"Great! **{last_count_number + 1}** ! Here's {int(coins)} coins for you, {message.author.mention}"
+                            elif (last_count_number + 1) % 100 == 0:
+                                coins = 4000
+                                response = f"Nice! **{last_count_number + 1}** ! Here's {int(coins)} coins for you, {message.author.mention}"
+                            else:
+                                coins = 0
+                            query = "UPDATE count_game SET last_count_number = %s, last_count_member_id = %s, last_modified_at = current_timestamp where server_id = %s"
+                            data = (content, message.author.id, message.guild.id)
+                            cursor.execute(query,data)
+                            conn.commit()
+
+                            query_coin = "UPDATE players SET coins = coins + %s, last_modified_at = current_timestamp WHERE player_id = %s"
+                            data_coin = (coins, message.author.id)
+                            cursor.execute(query_coin, data_coin)
+                            conn.commit()
+                        else:
+                            print('same member')
+                            query = "UPDATE count_game SET last_count_member_id = %s, last_count_message_id = %s, last_count_status = %s, last_modified_at = current_timestamp where server_id = %s"
+                            data = (message.author.id, message.id, "bad", message.guild.id)
+                            cursor.execute(query,data)
+                            conn.commit()
+                            await message.add_reaction("❌")
+                            await message.add_reaction("💰")
+                            await message.add_reaction("🔁")
+                            response = f"Oh no! {message.author.mention} broke the chain!\nYou could react with 💰 to pay a small fine of {last_count_fee} coins in order to continue the game!\nOr, if you wish to restart, simply react to the 🔁 and start all over again from 1!"
+                    else:
+                        print('wrong number')
+                        query = "UPDATE count_game SET last_count_member_id = %s, last_count_message_id = %s, last_count_status = %s, last_modified_at = current_timestamp where server_id = %s"
+                        data = (message.author.id, message.id, "bad", message.guild.id)
+                        cursor.execute(query,data)
+                        conn.commit()
+                        await message.add_reaction("❌")
+                        await message.add_reaction("💰")
+                        await message.add_reaction("🔁")
+                        response = f"Oh no! {message.author.mention} broke the chain!\nYou could react with 💰 to pay a small fine of {last_count_fee} coins in order to continue the game!\nOr, if you wish to restart, simply react to the 🔁 and start all over again from 1!"
+                else:
+                    print('not int')
+                    await message.delete()
+            else:
+                print('status bad')
+                await message.delete()
+            embed = discord.Embed(title="Apollo's Chain Counting Game", description=response)
+            embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717658774265004052/726063162364919818/nf67.png")
+            await message.channel.send(embed=embed)
+    except Exception as e:
+        print(e)
     conn.close()
     await client.process_commands(message)
 
@@ -318,7 +404,7 @@ async def clear(ctx, limits=5):
 @commands.has_permissions(administrator=True)
 @client.command('set_channel')
 async def set_channel(ctx, alias, channel: discord.TextChannel):
-    aliases = ['coins','exchange','slot','cards','count']
+    aliases = ['coins','exchange','slot','cards']
     conn = await get_conn()
     cursor = conn.cursor()
     if alias in ['coins','exchange','card','slot','count']:
@@ -330,12 +416,6 @@ async def set_channel(ctx, alias, channel: discord.TextChannel):
             query = "UPDATE servers SET card_game_channel_id = %s WHERE server_id = %s"
         elif alias == 'slot':
             query = "UPDATE servers SET slot_game_channel_id = %s WHERE server_id = %s"
-        elif alias == 'count':
-            query = "UPDATE servers SET count_game_channel_id = %s WHERE server_id = %s"
-            query_update = "UPDATE count_game SET count_game_channel_id = %s, last_count_number = %s, last_count_status = %s WHERE server_id = %s"
-            data_update = (channel.id, 0, "good", ctx.guild.id)
-            cursor.execute(query_update, data_update)
-            conn.commit()
         data = (channel.id, ctx.guild.id)
         cursor.execute(query, data)
         conn.commit()
@@ -350,7 +430,40 @@ async def set_channel(ctx, alias, channel: discord.TextChannel):
 async def set_channel_error(ctx, error):
     aliases = ['coins','exchange','slot','cards','count']
     await ctx.message.add_reaction("❌")
+    await ctx.send(error)
     await ctx.send(f"Uh Oh! You need to put an alias like {'/'.join(aliases)} and #channel you want to set")
+
+@commands.has_permissions(administrator=True)
+@client.command('start_count')
+async def start_count(ctx, channel : discord.TextChannel):
+    conn = await get_conn()
+    cursor = conn.cursor()
+    query = "UPDATE servers SET count_game_channel_id = %s WHERE server_id = %s"
+    cursor.execute(query,(channel.id, ctx.guild.id))
+    conn.commit()
+    try: # insert new row into count_game if not exist
+        query_insert = "INSERT INTO count_game(server_id, count_game_channel_id, last_count_member_id, last_count_number, last_count_status, last_count_fee, total_fee, created_at, last_modified_at) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+        data_insert = (ctx.guild.id, channel.id, 1, 0, 'good', 300, 0, datetime.datetime.now(), datetime.datetime.now())
+        cursor.execute(query_insert,data_insert)
+    except:
+        conn.commit()
+        query_update = "UPDATE count_game SET count_game_channel_id = %s, last_count_member_id = 1, last_count_number = %s, last_count_status = %s, last_count_fee = 300, total_fee = 0, last_modified_at = current_timestamp WHERE server_id = %s"
+        data_update = (channel.id, 0, "good", ctx.guild.id)
+        cursor.execute(query_update, data_update)
+        print("Updated channel count")
+    conn.commit()
+    embed = discord.Embed(title="Apollo's Chain Counting Game", description="Alright! Let's start all over again!")
+    embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717658774265004052/726063162364919818/nf67.png")
+    await channel.send(embed=embed)
+
+@start_count.error
+async def start_count_error(ctx,error):
+    await ctx.message.add_reaction("❌")
+    if isinstance(error, commands.MissingRequiredArgument):
+        response = f"```You need to define #channel you want to use for counting game. Example of proper usage:\n\n!apollo start_channel #apollo-count```"
+    else:
+        response = error
+    await ctx.send(response)
 
 @commands.has_permissions(administrator=True)
 @client.command('query')
@@ -668,7 +781,7 @@ async def exchange(ctx, *, item : str):
                 response = f"You don't seem to have the item in question. Perhaps try another one?"
                 await ctx.message.add_reaction("❌")
         else:
-            response = "```Sorry, you need to add a note for your exchange. Example of proper usage:\n!apollo exchange soup kettle token, my dodo code is: 123456```"
+            response = "```Sorry, you need to add a note for your exchange. Example of proper usage:\n\n!apollo exchange soup kettle token, my dodo code is: 123456```"
             await ctx.message.add_reaction("❌")
     except:
         pass
