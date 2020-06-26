@@ -70,6 +70,7 @@ CREATE TABLE IF NOT EXISTS public.count_game (
 	last_count_status TEXT,
 	last_count_fee INT,
 	last_count_member_pay TEXT,
+	max_count_game_reaction_time TIMESTAMP,
 	total_fee INT,
 	created_at TIMESTAMP,
 	last_modified_at TIMESTAMP
