@@ -625,19 +625,18 @@ async def items_error(ctx,error):
             member = ctx.author
             conn = await get_conn()
             cursor = conn.cursor()
-            query_coin = "SELECT last_card_game_answer_time, next_slot_time FROM players where player_id = %s"
+            query_coin = "SELECT last_card_game_answer_time FROM players where player_id = %s"
             data_coin = (member.id,)
             cursor.execute(query_coin,data_coin)
             result = cursor.fetchall()
             player_answer_time = result[0][0]
-            player_slot_time = result[0][1]
 
-            if (player_answer_time == None) or (datetime.datetime.now() > player_answer_time + datetime.timedelta(minutes=1)) or (datetime.datetime.now() > player_slot_time + datetime.timedelta(minutes=1)):
+            if (player_answer_time == None) or (datetime.datetime.now() > player_answer_time + datetime.timedelta(minutes=1)):
                 embed = await get_items_response(conn, member)
                 await ctx.send(embed=embed)
             else:
                 await ctx.message.add_reaction("❌")
-                await ctx.send(f"Uh Oh! {member.mention} you can check your wallet 1 minute after locking in an answer or playing slot!")
+                await ctx.send(f"Uh Oh! {member.mention} you can check your wallet 1 minute after locking in an answer!")
     except IndexError:
         await ctx.message.add_reaction("❌")
         await ctx.send(f"Uh Oh! Looks like {ctx.author.mention} haven't registered yet. Please register using `!apollo register`")
