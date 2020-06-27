@@ -369,24 +369,24 @@ async def on_message(message):
                             print('same member')
                             failed_count = True
                             query = "UPDATE count_game SET last_count_member_id = %s, last_count_message_id = %s, last_count_status = %s, last_count_member_pay = %s, max_count_game_reaction_time = %s, last_modified_at = current_timestamp where server_id = %s"
-                            data = (message.author.id, message.id, "bad", "wait", datetime.datetime.now() + datetime.timedelta(minutes=1), message.guild.id)
+                            data = (message.author.id, message.id, "bad", "wait", datetime.datetime.now() + datetime.timedelta(seconds=15), message.guild.id)
                             cursor.execute(query,data)
                             conn.commit()
                             await message.add_reaction("❌")
                             await message.add_reaction("💰")
                             await message.add_reaction("🔁")
-                            response = f"Oh no! {message.author.mention} broke the chain!\nYou could react with 💰 to pay a small fine of {last_count_fee} coins in order to continue the game!\nOr, if you wish to restart, simply react to the 🔁 and start all over again from 1!"
+                            response = f"Oh no! {message.author.mention} broke the chain. (**{content}**)!\nYou could react with 💰 to pay a small fine of **{last_count_fee}** coins in order to continue the game!\nOr, if you wish to restart, simply react to the 🔁 and start all over again from 1!"
                     else:
                         print('wrong number')
                         failed_count = True
                         query = "UPDATE count_game SET last_count_member_id = %s, last_count_message_id = %s, last_count_status = %s, last_count_member_pay = %s, max_count_game_reaction_time = %s, last_modified_at = current_timestamp where server_id = %s"
-                        data = (message.author.id, message.id, "bad", "wait", datetime.datetime.now() + datetime.timedelta(minutes=1),message.guild.id)
+                        data = (message.author.id, message.id, "bad", "wait", datetime.datetime.now() + datetime.timedelta(seconds=15),message.guild.id)
                         cursor.execute(query,data)
                         conn.commit()
                         await message.add_reaction("❌")
                         await message.add_reaction("💰")
                         await message.add_reaction("🔁")
-                        response = f"Oh no! {message.author.mention} broke the chain!\nYou could react with 💰 to pay a small fine of {last_count_fee} coins in order to continue the game!\nOr, if you wish to restart, simply react to the 🔁 and start all over again from 1!"
+                        response = f"Oh no! {message.author.mention} broke the chain. (**{content}**)!\nYou could react with 💰 to pay a small fine of **{last_count_fee}** coins in order to continue the game!\nOr, if you wish to restart, simply react to the 🔁 and start all over again from 1!"
                 else:
                     print('not int')
                     await message.delete()
@@ -396,7 +396,7 @@ async def on_message(message):
             embed = discord.Embed(title="Apollo's Chain Counting Game", description=response, color=discord.Color.purple())
             embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717658774265004052/726063162364919818/nf67.png")
             if failed_count:
-                embed.add_field(name="Notes (for other players)",value="If the failed player doesn't react in 1 minute for their mistake, please react with 💰 on their failed count message to pay the fine and continue the game!")
+                embed.add_field(name="Note",value="Only the player, who has broken the chain, can react. If there are no reactions within 15 seconds, it is then open for other players to react with 💰.")
             await message.channel.send(embed=embed)
     except Exception as e:
         print(e)
