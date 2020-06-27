@@ -389,7 +389,6 @@ async def on_message(message):
                         response = f"Oh no! {message.author.mention} broke the chain. (**{content}**)!\nYou could react with 💰 to pay a small fine of **{last_count_fee}** coins in order to continue the game!\nOr, if you wish to restart, simply react to the 🔁 and start all over again from 1!"
                 else:
                     print('not int')
-                    await message.delete()
             else:
                 print('status bad')
                 await message.delete()
