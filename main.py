@@ -230,7 +230,7 @@ async def on_raw_reaction_add(payload):
                 if last_count_status == "bad":
                     if payload.emoji.name == "💰":
                         if player_coin == 0 or player_coin < last_count_fee:
-                            response = f"It seems {payload.member.mention} doesn't have enough coins! If somebody else wants to pay the fee, please react with 💰 on their message!"
+                            response = f"It seems {payload.member.mention} doesn't have enough coins! If somebody else wants to pay the fee, please react with 💰 on their failed count message!"
                             query_update_count = "UPDATE count_game SET last_count_member_pay = %s, last_modified_at = current_timestamp WHERE server_id = %s"
                             data_update_count = ("no", guild_id)
                             cursor.execute(query_update_count, data_update_count)
@@ -247,11 +247,11 @@ async def on_raw_reaction_add(payload):
                             response = f"{payload.member.mention} has decided to pay with his coins! The count resumes! Have fun!"
                             print('continue count')
                     elif payload.emoji.name == "🔁":
-                        query_update_count = "UPDATE count_game SET last_count_number = 0, last_count_status = %s, last_count_member_id = 1, last_count_fee = 300, last_modified_at = current_timestamp WHERE server_id = %s"
-                        data_update_count = ("good", guild_id)
+                        query_update_count = "UPDATE count_game SET last_count_member_pay = %s, last_count_member_id = 1, last_modified_at = current_timestamp WHERE server_id = %s"
+                        data_update_count = ("wait", guild_id)
                         cursor.execute(query_update_count, data_update_count)
                         conn.commit()
-                        response = f"{payload.member.mention} has decided to start all over again from 1 !"
+                        response = f"It seems {payload.member.mention} wants to start over!\nReact with 🔁 if you wish you start over \nor, react with 💰 if you wish to continue on their failed count message!\nBut remember, you need to pay the fine of {last_count_fee}"
                         print('restart count')
             elif (last_count_member_pay == "no") or ((last_count_member_pay == "wait") and (datetime.datetime.now() >= max_count_game_reaction_time)):
                 if payload.emoji.name == "💰":
@@ -273,6 +273,13 @@ async def on_raw_reaction_add(payload):
                         conn.commit()
                         response = f"{payload.member.mention} has decided to pay with his coins! The count resumes! Have fun!"
                         print('continue count')
+                elif payload.emoji.name == "🔁":
+                    response = f"Uh oh, well, it seems {payload.member.mention} also wants to start over! Oh well! We'll just have to start from 1! Have fun!"
+                    query_update_count = "UPDATE count_game SET last_count_member_id = 1, last_count_number = 0, last_count_status = %s, last_count_fee = 300, last_count_member_pay = %s, last_modified_at = current_timestamp WHERE server_id = %s"
+                    data_update_count = ("good", "yes", guild_id)
+                    cursor.execute(query_update_count, data_update_count)
+                    conn.commit()
+                    print('restart count')
             embed = discord.Embed(title="Apollo's Chain Counting Game", description=response, color=discord.Color.purple())
             embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717658774265004052/726063162364919818/nf67.png")
             await channel.send(embed=embed)
@@ -395,7 +402,7 @@ async def on_message(message):
             embed = discord.Embed(title="Apollo's Chain Counting Game", description=response, color=discord.Color.purple())
             embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717658774265004052/726063162364919818/nf67.png")
             if failed_count:
-                embed.add_field(name="Note",value="Only the player, who has broken the chain, can react. If there are no reactions within 15 seconds, it is then open for other players to react with 💰.")
+                embed.add_field(name="Note",value="Only the player, who has broken the chain, can react. If there are no reactions within 15 seconds, it is then open for other players to react with 💰 on their failed count message.")
             await message.channel.send(embed=embed)
     except Exception as e:
         print(e)
@@ -618,19 +625,19 @@ async def items_error(ctx,error):
             member = ctx.author
             conn = await get_conn()
             cursor = conn.cursor()
-            query_coin = "SELECT last_card_game_answer_time FROM players where player_id = %s"
+            query_coin = "SELECT last_card_game_answer_time, next_slot_time FROM players where player_id = %s"
             data_coin = (member.id,)
             cursor.execute(query_coin,data_coin)
             result = cursor.fetchall()
-            player_answer_time = [e[0] for e in result]
-            player_answer_time = player_answer_time[0]
+            player_answer_time = result[0][0]
+            player_slot_time = result[0][1]
 
-            if (player_answer_time == None) or (datetime.datetime.now() > player_answer_time + datetime.timedelta(minutes=1)):
+            if (player_answer_time == None) or (datetime.datetime.now() > player_answer_time + datetime.timedelta(minutes=1)) or (datetime.datetime.now() > player_slot_time + datetime.timedelta(minutes=1)):
                 embed = await get_items_response(conn, member)
                 await ctx.send(embed=embed)
             else:
                 await ctx.message.add_reaction("❌")
-                await ctx.send(f"Uh Oh! {member.mention} you can check your wallet 1 minute after locking in an answer!")
+                await ctx.send(f"Uh Oh! {member.mention} you can check your wallet 1 minute after locking in an answer or playing slot!")
     except IndexError:
         await ctx.message.add_reaction("❌")
         await ctx.send(f"Uh Oh! Looks like {ctx.author.mention} haven't registered yet. Please register using `!apollo register`")
