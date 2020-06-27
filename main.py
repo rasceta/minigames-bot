@@ -461,7 +461,7 @@ async def start_count(ctx, channel : discord.TextChannel):
     conn.commit()
     await ctx.message.add_reaction("✅")
     print("Updated channel count (start_count)")
-    embed = discord.Embed(title="Apollo's Chain Counting Game", description="Alright! Let's start all over again!")
+    embed = discord.Embed(title="Apollo's Chain Counting Game", description="Alright! Let's start all over again!", color=discord.Color.purple())
     embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717658774265004052/726063162364919818/nf67.png")
     await channel.send(embed=embed)
 
@@ -720,7 +720,7 @@ async def shop(ctx):
     embed.add_field(name="**♥Heart Token♥**. Worth 3 stacks of anything from the dodo code", value="Price: 💰20.000")
     embed.add_field(name="**🎲Gambler🎲**. Purchasing this role signifies your dedication as a gambler, and not only do you have the fiery spirit of one, but you also have the coins to back it up!", value="Price: 💰20.000", inline=False)
     embed.add_field(name="**🤑Wealthy🤑**. Purchasing this role means you have an ample amount of coins at your disposal! The role is permanent and everyone can see exactly how wealthy you are.", value="Price: 💰200.000", inline=True)
-    embed.add_field(name="Notes",value="If you want to turn in your items! Please use `!apollo exchange <items>, <dodo code>`. **Please be sure to open your island before turning in a token!**",inline=False)
+    embed.add_field(name="Notes",value="If you want to turn in your items! Please use `!apollo exchange <item>, <dodo code>`. **Please be sure to open your island before turning in a token!**",inline=False)
 
     await ctx.send(embed=embed)
 
