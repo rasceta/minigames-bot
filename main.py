@@ -244,14 +244,14 @@ async def on_raw_reaction_add(payload):
                             conn.commit()
                             cursor.execute(query_update_count, data_update_count)
                             conn.commit()
-                            response = f"{payload.member.mention} choosed to pay with his coins and now the count is continued!"
+                            response = f"{payload.member.mention} has decided to pay with his coins! The count resumes! Have fun!"
                             print('continue count')
                     elif payload.emoji.name == "🔁":
                         query_update_count = "UPDATE count_game SET last_count_number = 0, last_count_status = %s, last_count_member_id = 1, last_count_fee = 300, last_modified_at = current_timestamp WHERE server_id = %s"
                         data_update_count = ("good", guild_id)
                         cursor.execute(query_update_count, data_update_count)
                         conn.commit()
-                        response = f"{payload.member.mention} choosed to start all over again from 1 !"
+                        response = f"{payload.member.mention} has decided to start all over again from 1 !"
                         print('restart count')
             elif (last_count_member_pay == "no") or ((last_count_member_pay == "wait") and (datetime.datetime.now() >= max_count_game_reaction_time)):
                 if payload.emoji.name == "💰":
@@ -271,9 +271,9 @@ async def on_raw_reaction_add(payload):
                         conn.commit()
                         cursor.execute(query_update_count, data_update_count)
                         conn.commit()
-                        response = f"{payload.member.mention} choosed to pay with his coins and now the count is now continued!"
+                        response = f"{payload.member.mention} has decided to pay with his coins! The count resumes! Have fun!"
                         print('continue count')
-            embed = discord.Embed(title="Apollo's Chain Counting Game", description=response)
+            embed = discord.Embed(title="Apollo's Chain Counting Game", description=response, color=discord.Color.purple())
             embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717658774265004052/726063162364919818/nf67.png")
             await channel.send(embed=embed)
     except Exception as e:
@@ -346,13 +346,13 @@ async def on_message(message):
                             await message.add_reaction("✅")
                             failed_count = False
                             if (last_count_number + 1) % 1000 == 0:
-                                coins = 40000
+                                coins = 100000
                                 response = f"Awesome! **{last_count_number + 1}** ! Here's {int(coins)} coins for you, {message.author.mention}"
                             elif (last_count_number + 1) % 500 == 0:
-                                coins = 20000
+                                coins = 50000
                                 response = f"Great! **{last_count_number + 1}** ! Here's {int(coins)} coins for you, {message.author.mention}"
                             elif (last_count_number + 1) % 100 == 0:
-                                coins = 4000
+                                coins = 12000
                                 response = f"Nice! **{last_count_number + 1}** ! Here's {int(coins)} coins for you, {message.author.mention}"
                             else:
                                 coins = 0
@@ -393,10 +393,10 @@ async def on_message(message):
             else:
                 print('status bad')
                 await message.delete()
-            embed = discord.Embed(title="Apollo's Chain Counting Game", description=response)
+            embed = discord.Embed(title="Apollo's Chain Counting Game", description=response, color=discord.Color.purple())
             embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717658774265004052/726063162364919818/nf67.png")
             if failed_count:
-                embed.add_field(name="Notes (for other players)",value="If the failed player didn't react in 1 minute for their mistake, please react with 💰 on their failed count message to pay the fine and continue the game!")
+                embed.add_field(name="Notes (for other players)",value="If the failed player doesn't react in 1 minute for their mistake, please react with 💰 on their failed count message to pay the fine and continue the game!")
             await message.channel.send(embed=embed)
     except Exception as e:
         print(e)
@@ -715,9 +715,11 @@ async def shop(ctx):
     embed = discord.Embed(  title="Apollo's Shop",
                             description="Welcome to Apollo's Shop! You can purchase any of these items by typing `!apollo purchase <item>`",
                             color=discord.Color.green())
-    embed.add_field(name="**🍲Soup Kettle Token🍲**. Can be traded for a soup Kettle. Which you can then turn in the soup kettle for bells. Each soup kettle when given to a treasurer is worth 99,000 Bells", value="Price: 💰4.000",inline=False)
-    embed.add_field(name="**🔴Foundation Token🔴**. Worth 1 stack of anything from the dodo code",value="Price: 💰12.000",inline=True)
-    embed.add_field(name="**♥Heart Token♥**. Worth 3 stacks of anything from the dodo code",value="Price: 💰20.000")
+    embed.add_field(name="**🍲Soup Kettle Token🍲**. Can be traded for a soup Kettle. Which you can then turn in the soup kettle for bells. Each soup kettle when given to a treasurer is worth 99,000 Bells", value="Price: 💰4.000", inline=False)
+    embed.add_field(name="**🔴Foundation Token🔴**. Worth 1 stack of anything from the dodo code", value="Price: 💰12.000", inline=True)
+    embed.add_field(name="**♥Heart Token♥**. Worth 3 stacks of anything from the dodo code", value="Price: 💰20.000")
+    embed.add_field(name="**🎲Gambler🎲**. Purchasing this role signifies your dedication as a gambler, and not only do you have the fiery spirit of one, but you also have the coins to back it up!", value="Price: 💰20.000", inline=False)
+    embed.add_field(name="**🤑Wealthy🤑**. Purchasing this role means you have an ample amount of coins at your disposal! The role is permanent and everyone can see exactly how wealthy you are.", value="Price: 💰200.000", inline=True)
     embed.add_field(name="Notes",value="If you want to turn in your items! Please use `!apollo exchange <items>, <dodo code>`. **Please be sure to open your island before turning in a token!**",inline=False)
 
     await ctx.send(embed=embed)
@@ -726,7 +728,7 @@ async def shop(ctx):
 async def purchase(ctx, *, item : str):
     member = ctx.author
     item = item.lower()
-    item_dict = {'soup kettle token':4000, 'foundation token':12000, 'heart token':20000}
+    item_dict = {'soup kettle token':4000, 'foundation token':12000, 'heart token':20000, 'gambler':20000, 'wealthy':200000}
 
     conn = await get_conn()
     cursor = conn.cursor()
@@ -739,16 +741,32 @@ async def purchase(ctx, *, item : str):
 
     if item in item_dict.keys():
         if player_coin > item_dict[item]:
-            query_item = "INSERT INTO items (player_id,player_name,item_name,created_at,last_modified_at) VALUES (%s,%s,%s,%s,%s)"
-            data_item = (member.id, member.name, item, datetime.datetime.now(), datetime.datetime.now())
-            query_coin = "UPDATE players SET coins = coins - %s, last_modified_at = %s WHERE player_id = %s"
-            data_coin = (item_dict[item], datetime.datetime.now(), member.id)
-            cursor.execute(query_item,data_item)
-            cursor.execute(query_coin, data_coin)
-            conn.commit()
-            conn.close()
-            await ctx.message.add_reaction("✅")
-            response = f"<@{member.id}> has successfully purchased `{item}` from shop!"
+            has_role = False
+            if item not in ["gambler", "wealthy"]:
+                query_item = "INSERT INTO items (player_id,player_name,item_name,created_at,last_modified_at) VALUES (%s,%s,%s,%s,%s)"
+                data_item = (member.id, member.name, item, datetime.datetime.now(), datetime.datetime.now())
+                query_coin = "UPDATE players SET coins = coins - %s, last_modified_at = %s WHERE player_id = %s"
+                data_coin = (item_dict[item], datetime.datetime.now(), member.id)
+                cursor.execute(query_item,data_item)
+                conn.commit()
+                cursor.execute(query_coin, data_coin)
+                conn.commit()
+            elif item in ["gambler","wealthy"]:
+                if discord.utils.get(member.roles, name=item.title()) is not None:
+                    has_role = True
+                else:
+                    query_coin = "UPDATE players SET coins = coins - %s, last_modified_at = %s WHERE player_id = %s"
+                    data_coin = (item_dict[item], datetime.datetime.now(), member.id)
+                    cursor.execute(query_coin, data_coin)
+                    conn.commit()
+                    await member.add_roles(discord.utils.get(member.guild.roles, name=item.title()))
+            
+            if has_role is False:
+                await ctx.message.add_reaction("✅")
+                response = f"<@{member.id}> has successfully purchased `{item}` from shop!"
+            else:
+                await ctx.message.add_reaction("❌")
+                response = f"{member.mention}, You already have the {item.title()} role!"
         else:
             await ctx.message.add_reaction("❌")
             choices = ["Hey. Buddy. You need more than what you got for that.",
@@ -758,7 +776,7 @@ async def purchase(ctx, *, item : str):
     else:
         await ctx.message.add_reaction("❌")
         response = f"I'm sorry, I couldn't find `{item}` in my shop"
-    
+    conn.close()
     await ctx.send(response)
 
 @purchase.error
@@ -766,6 +784,7 @@ async def purchase_error(ctx,error):
     await ctx.message.add_reaction("❌")
     if isinstance(error, commands.CommandInvokeError):
         await ctx.send(f"Uh Oh! Looks like {ctx.author.mention} haven't registered yet. Please register using `!apollo register`")
+        await ctx.send(error)
     else:
         await ctx.send("```Uh Oh! You need to define the item you want to purchase. Example of proper usage: \n\n!apollo exchange soup kettle token```")
 
