@@ -390,7 +390,7 @@ async def on_message(message):
                         await message.add_reaction("🔁")
                         response = f"Oh no! {message.author.mention} broke the chain. (**{content}**)!\nYou could react with 💰 to pay a small fine of **{last_count_fee}** coins in order to continue the game!\nOr, if you wish to restart, simply react to the 🔁 and start all over again from 1!"
                 else:
-                    print('not int')
+                    print('Normal chat (count game)')
             else:
                 print('status bad')
                 await message.delete()
@@ -654,7 +654,7 @@ async def daily(ctx):
                 free_coins = 10000
             elif discord.utils.get(member.roles, name="Donor") is not None:
                 free_coins = 1500
-            elif discord.utils.get(member.roles, name="Members") is not None:
+            elif (discord.utils.get(member.roles, name="Members") is not None) or (discord.utils.get(member.roles, name="Explorer") is not None):
                 free_coins = 400
             query = "UPDATE players SET coins = coins + %s, next_daily_coins_time = %s where player_id = %s"
             next_daily_coins = datetime.datetime.now() + datetime.timedelta(days=1)
