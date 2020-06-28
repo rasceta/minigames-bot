@@ -64,7 +64,8 @@ async def apollo_free_coins():
             data = (new_message.id, max_reaction_time, free_coins_amount, channel.id)
             cursor.execute(query,data)
             conn.commit()
-            conn.close()
+            
+    conn.close()
 
     embed = discord.Embed(title="Free Coins",
                         description="I must go now! Toodle doo~ I'll be back whenever!")
@@ -239,7 +240,7 @@ async def on_raw_reaction_add(payload):
                             conn.commit()
                             cursor.execute(query_update_count, data_update_count)
                             conn.commit()
-                            response = f"{payload.member.mention} has decided to pay with his coins! The count resumes! Have fun!"
+                            response = f"{payload.member.mention} has decided to pay with their coins! The count resumes! Have fun!"
                             print('continue count')
                     elif payload.emoji.name == "🔁":
                         query_update_count = "UPDATE count_game SET last_count_member_pay = %s, last_count_member_id = 1, last_modified_at = current_timestamp WHERE server_id = %s"
@@ -266,7 +267,7 @@ async def on_raw_reaction_add(payload):
                         conn.commit()
                         cursor.execute(query_update_count, data_update_count)
                         conn.commit()
-                        response = f"{payload.member.mention} has decided to pay with his coins! The count resumes! Have fun!"
+                        response = f"{payload.member.mention} has decided to pay with their coins! The count resumes! Have fun!"
                         print('continue count')
                 elif payload.emoji.name == "🔁":
                     response = f"Uh oh, well, it seems {payload.member.mention} also wants to start over! Oh well! We'll just have to start from 1! Have fun!"
