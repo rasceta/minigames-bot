@@ -40,7 +40,6 @@ async def apollo_free_coins():
     result = cursor.fetchall()
     free_coins_channel_id_list = [e[0] for e in result]
 
-    channel_id = 0
     for channel in client.get_all_channels():
         if channel.id in free_coins_channel_id_list:
 
