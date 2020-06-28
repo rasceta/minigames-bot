@@ -129,11 +129,11 @@ async def get_donate_response(ctx, conn, donater, member, donation_amount):
             if (datetime.datetime.now() > next_donate_time):
                 if (datetime.datetime.now() > next_donation_time):
                     query_donater = "UPDATE players SET coins = coins - %s, next_donate_time = %s, last_modified_at = %s where player_id = %s"
-                    next_donate_time = datetime.datetime.now() + datetime.timedelta(seconds=5)
+                    next_donate_time = datetime.datetime.now() + datetime.timedelta(seconds=2)
                     data_donater = (donation_amount, next_donate_time, datetime.datetime.now(), donater.id)
                     cursor.execute(query_donater, data_donater)
                     query_donate_to = "UPDATE players SET coins = coins + %s, next_donation_time = %s, last_modified_at = %s where player_id = %s"
-                    next_donation_time = datetime.datetime.now() + datetime.timedelta(minutes=1)
+                    next_donation_time = datetime.datetime.now() + datetime.timedelta(seconds=2)
                     data_donate_to = (donation_amount, next_donation_time, datetime.datetime.now(), member.id)
                     cursor.execute(query_donate_to, data_donate_to)
                     conn.commit()
@@ -155,10 +155,10 @@ async def get_donate_response(ctx, conn, donater, member, donation_amount):
                 response = f"Donation failed. <@{donater.id}> will be able to donate in {hours} hour(s) {minutes} minute(s) and {seconds} second(s)"
         else:
             await ctx.message.add_reaction("❌")
-            response = f"Uh oh! <@{member.id}> cannot donate more than 50.000 coins!"
+            response = f"Uh oh! <@{donater.id}> cannot donate more than 50.000 coins!"
     else:
         await ctx.message.add_reaction("❌")
-        response = f"Uh oh! <@{member.id}> doesn't seem to have that much coins!"
+        response = f"Uh oh! <@{donater.id}> doesn't seem to have that much coins!"
     return response
 
 async def get_guess_response(ctx, conn, member, guess_answer, bet_amount):

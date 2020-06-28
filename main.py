@@ -41,9 +41,8 @@ async def apollo_free_coins():
     free_coins_channel_id_list = [e[0] for e in result]
 
     channel_id = 0
-    for channel_id in free_coins_channel_id_list:
-        if channel_id != None:
-            channel = client.get_channel(channel_id)
+    for channel in client.get_all_channels():
+        if channel.id in free_coins_channel_id_list:
 
             rand_num = random.randint(1,10)
             if rand_num <= 8:
@@ -63,7 +62,7 @@ async def apollo_free_coins():
             max_reaction_time = datetime.datetime.now() + datetime.timedelta(seconds=40)
 
             query = "UPDATE servers SET last_free_coins_message_id = %s, max_free_coins_reaction_time = %s, free_coins_amount = %s WHERE free_coins_channel_id = %s"
-            data = (new_message.id, max_reaction_time, free_coins_amount, channel_id)
+            data = (new_message.id, max_reaction_time, free_coins_amount, channel.id)
             cursor.execute(query,data)
             conn.commit()
             conn.close()
@@ -73,9 +72,8 @@ async def apollo_free_coins():
     embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717658774265004052/723924559446802502/coins2.png")
     embed.set_footer(text="In the meantime! Please check out #community features!")
     await asyncio.sleep(40)
-    for channel_id in free_coins_channel_id_list:
-        if channel_id != None:
-            channel = client.get_channel(channel_id)
+    for channel in client.get_all_channels():
+        if channel.id in free_coins_channel_id_list:
             await channel.send(embed=embed)
 
 @apollo_free_coins.before_loop
@@ -106,14 +104,13 @@ async def apollo_card_games():
     embed.set_image(url=game_intro[2])
     embed.set_thumbnail(url="http://clipart-library.com/images/pT5o6baac.jpg")
 
-    for channel_id in card_game_channel_id_list:
-        if channel_id != None:
-            channel = client.get_channel(channel_id)
+    for channel in client.get_all_channels():
+        if channel.id in card_game_channel_id_list:
             new_message = await channel.send(embed=embed)
             max_card_games_reaction_time = datetime.datetime.now() + datetime.timedelta(minutes=1)
 
             query = "UPDATE servers SET last_card_games_name = %s, last_card_games_answer = %s, last_card_games_message_id = %s, max_card_games_reaction_time = %s, last_modified_at = %s WHERE card_game_channel_id = %s"
-            data = (game_name, answer, new_message.id, max_card_games_reaction_time, datetime.datetime.now(), channel_id)
+            data = (game_name, answer, new_message.id, max_card_games_reaction_time, datetime.datetime.now(), channel.id)
             cursor.execute(query,data)
             conn.commit()
 
@@ -146,9 +143,8 @@ async def apollo_card_games():
         embed.set_thumbnail(url="http://clipart-library.com/images/pT5o6baac.jpg")
         embed.add_field(name="**Winners**",value=players_won)
 
-        for c_id in card_game_channel_id_list:
-            if c_id != None:
-                channel = client.get_channel(c_id)    
+        for channel in client.get_all_channels():
+            if channel.id in card_game_channel_id_list:
                 await channel.send(embed=embed)
         
         conn.close()
