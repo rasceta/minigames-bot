@@ -675,9 +675,53 @@ async def daily(ctx):
 
 @daily.error
 async def daily_error(ctx,error):
+    await ctx.message.add_reaction("❌")
     if isinstance(error, commands.CommandInvokeError):
-        await ctx.message.add_reaction("❌")
         await ctx.send(f"{ctx.author.mention} you can't claim your daily rewards because you have not registered! Please type `!apollo register`")
+
+@commands.has_any_role('Giver','Donor')
+@client.command('weekly')
+async def weekly(ctx):
+    member = ctx.author
+    conn = await get_conn()
+    cursor = conn.cursor()
+    query_weekly = "SELECT next_weekly_coins_time FROM players where player_id = %s"
+    data_weekly = (member.id,)
+    cursor.execute(query_weekly,data_weekly)
+    result = cursor.fetchall()
+    next_weekly_coins = [e[0] for e in result]
+    next_weekly_coins = next_weekly_coins[0]
+
+    if isinstance(next_weekly_coins, datetime.datetime):
+        if (datetime.datetime.now () > next_weekly_coins):
+            if discord.utils.get(member.roles, name="Giver") is not None:
+                free_coins = 100000
+            elif discord.utils.get(member.roles, name="Donor") is not None:
+                free_coins = 15000
+            query = "UPDATE players SET coins = coins + %s, next_weekly_coins_time = %s where player_id = %s"
+            next_weekly_coins = datetime.datetime.now() + datetime.timedelta(weeks=1)
+            data = (free_coins, next_weekly_coins, member.id)
+            cursor.execute(query, data)
+            await ctx.message.add_reaction("✅")
+            await ctx.send(f"{ctx.author.mention}, thank you! You have claimed your weekly reward of {free_coins} coins! Please check again next week!")
+        else:
+            next_weekly_coins = next_weekly_coins - datetime.datetime.now()
+            days = int(next_weekly_coins.day)
+            minutes = int((next_weekly_coins.seconds % 3600) / 60)
+            hours = int(next_weekly_coins.seconds / 3600)
+            seconds = int(next_weekly_coins.seconds % 60)
+            await ctx.message.add_reaction("❌")
+            await ctx.send(f"{ctx.author.mention}, you still have {days} day(s) {hours} hour(s) {minutes} minute(s) and {seconds} second(s) before your next weekly reward!")
+    conn.commit()
+    conn.close()
+
+@weekly.error
+async def weekly_error(ctx,error):
+    await ctx.message.add_reaction("❌")
+    if isinstance(error, commands.CommandInvokeError):
+        await ctx.send(f"{ctx.author.mention} you can't claim your weekly rewards because you have not registered! Please type `!apollo register`")
+    elif isinstance(error, commands.MissingAnyRole):
+        await ctx.send(f"Sorry, this command can only be used by `Donor` and `Giver` role")
 
 @commands.has_permissions(administrator=True)
 @client.command('reset_daily')
@@ -691,6 +735,19 @@ async def reset_daily(ctx):
     conn.close()
     await ctx.message.add_reaction("✅")
     await ctx.send("All players free daily coins has been reset to now")
+
+@commands.has_permissions(administrator=True)
+@client.command('reset_weekly')
+async def reset_weekly(ctx):
+    conn = await get_conn()
+    cursor = conn.cursor()
+
+    query = "UPDATE players SET next_weekly_coins_time = current_timestamp"
+    cursor.execute(query)
+    conn.commit()
+    conn.close()
+    await ctx.message.add_reaction("✅")
+    await ctx.send("All players free weekly coins has been reset to now")
 
 @client.command('donate')
 async def donate(ctx, member : discord.User, donation_amount : int):
@@ -866,11 +923,16 @@ async def guess_error(ctx, error):
     await ctx.message.add_reaction("❌")
     if isinstance(error, commands.CommandInvokeError):
         await ctx.send(f"Uh Oh! Looks like {ctx.author.mention} haven't registered yet. Please register using `!apollo register`")
+        await ctx.send(error)
     else:
         await ctx.send(f"```Please input your answer and bet amount clearly. Example of proper usage: !apollo guess red 100```")
 
 @client.command(name='leaderboard',aliases=['rank'])
 async def leaderboard(ctx):
+    await ctx.message.add_reaction("✅")
+    await ctx.send(f"Alright {ctx.author.mention} please wait one minute while I tally the results...")
+    await asyncio.sleep(70)
+
     conn = await get_conn()
     cursor = conn.cursor()
     query_rank = "SELECT player_name, coins FROM players ORDER BY coins DESC"
@@ -891,9 +953,6 @@ async def leaderboard(ctx):
                           description=response)
     embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717658774265004052/723924559446802502/coins2.png")
 
-    await ctx.message.add_reaction("✅")
-    await ctx.send(f"Alright {ctx.author.mention} please wait one minute while I tally the results...")
-    await asyncio.sleep(70)
     await ctx.send(f"Here you go {ctx.author.mention}!")
     await ctx.send(embed=embed)
 

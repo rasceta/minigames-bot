@@ -61,19 +61,19 @@ async def get_slot_response(ctx, conn, member, slot, stars_count, bet_amount):
             if bet_amount <= player_coin:
                 if (next_slot_time == None) or (datetime.datetime.now() > next_slot_time):
                     if stars_count == 1:
-                        response_win = f"Oh, that's too bad! Poor <@{member.id}> landed 1 star. Here you go! **{int(bet_amount*0.4)}** coins for you!"
+                        response_win = f"Oh, that's too bad! Poor {member.mention} landed 1 star. Here you go! **{int(bet_amount*0.4)}** coins for you!"
                         coins = int(bet_amount*0.4) - bet_amount
                     elif stars_count == 2:
-                        response_win = f"Hey, not bad! <@{member.id}> rolled 2 stars! Take it! **{int(bet_amount*(1.3))}** coins for you!"
+                        response_win = f"Hey, not bad! {member.mention} rolled 2 stars! Take it! **{int(bet_amount*(1.3))}** coins for you!"
                         coins = int(bet_amount*(1.3)) - bet_amount
                     elif stars_count == 3:
-                        response_win = f"Congratulations! <@{member.id}> rolled 3 stars! Amazing! **{int(bet_amount*2)}** coins for you!"
+                        response_win = f"Congratulations! {member.mention} rolled 3 stars! Amazing! **{int(bet_amount*2)}** coins for you!"
                         coins = int(bet_amount*2) - bet_amount
                     elif stars_count == 4:
-                        response_win = f"Sensational! <@{member.id}> rolled 4 stars! What are the odds? You deserve it! **{int(bet_amount*4)}** coins for you!"
+                        response_win = f"Sensational! {member.mention} rolled 4 stars! What are the odds? You deserve it! **{int(bet_amount*4)}** coins for you!"
                         coins = int(bet_amount*4) - bet_amount
                     else:
-                        response_win = f"Hey, there's always next time <@{member.id}>. Feel free to try again!"
+                        response_win = f"Hey, there's always next time {member.mention}. Feel free to try again!"
                         coins = -bet_amount
                     
                     query = "UPDATE players SET coins = coins + %s, next_slot_time = %s, last_modified_at = %s WHERE player_id = %s"
@@ -93,16 +93,16 @@ async def get_slot_response(ctx, conn, member, slot, stars_count, bet_amount):
                     minutes = int((next_slot_time.seconds % 3600) / 60)
                     seconds = int(next_slot_time.seconds % 60)
                     await ctx.message.add_reaction("❌")
-                    response = f"Uh Oh! <@{member.id}> can use slot machine again in {minutes}m and {seconds}s"
+                    response = f"Uh Oh! {member.mention} can use slot machine again in {minutes}m and {seconds}s"
             else:
                 await ctx.message.add_reaction("❌")
-                response = f"Uh Oh! <@{member.id}> doesn't seem have enough coins to bet."
+                response = f"Uh Oh! {member.mention} doesn't seem have enough coins to bet."
         else:
             await ctx.message.add_reaction("❌")
-            response = f"Uh Oh! <@{member.id}>'s bet amount must be below 2000."
+            response = f"Uh Oh! {member.mention}'s bet amount must be below 2000."
     else:
         await ctx.message.add_reaction("❌")
-        response = f"Uh Oh! <@{member.id}> can only play slot in slot machine channel."
+        response = f"Uh Oh! {member.mention} can only play slot in slot machine channel."
     return response
 
 async def get_donate_response(ctx, conn, donater, member, donation_amount):
@@ -138,27 +138,27 @@ async def get_donate_response(ctx, conn, donater, member, donation_amount):
                     cursor.execute(query_donate_to, data_donate_to)
                     conn.commit()
                     await ctx.message.add_reaction("✅")
-                    response = f"<@{donater.id}> Successfully donated {donation_amount} coins to <@{member.id}>"
+                    response = f"{donater.mention} Successfully donated {donation_amount} coins to {member.mention}"
                 else:
                     next_donation_time = next_donation_time - datetime.datetime.now()
                     minutes = int((next_donation_time.seconds % 3600) / 60)
                     hours = int(next_donation_time.seconds / 3600)
                     seconds = int(next_donation_time.seconds % 60)
                     await ctx.message.add_reaction("❌")
-                    response = f"Donation failed. <@{member.id}> will be able to be donated in {hours} hour(s) {minutes} minute(s) and {seconds} second(s)"
+                    response = f"Donation failed. {member.mention} will be able to be donated in {hours} hour(s) {minutes} minute(s) and {seconds} second(s)"
             else:
                 next_donate_time = next_donate_time - datetime.datetime.now()
                 minutes = int((next_donate_time.seconds % 3600) / 60)
                 hours = int(next_donate_time.seconds / 3600)
                 seconds = int(next_donate_time.seconds % 60)
                 await ctx.message.add_reaction("❌")
-                response = f"Donation failed. <@{donater.id}> will be able to donate in {hours} hour(s) {minutes} minute(s) and {seconds} second(s)"
+                response = f"Donation failed. {donater.mention} will be able to donate in {hours} hour(s) {minutes} minute(s) and {seconds} second(s)"
         else:
             await ctx.message.add_reaction("❌")
-            response = f"Uh oh! <@{donater.id}> cannot donate more than 50.000 coins!"
+            response = f"Uh oh! {donater.mention} cannot donate more than 50.000 coins!"
     else:
         await ctx.message.add_reaction("❌")
-        response = f"Uh oh! <@{donater.id}> doesn't seem to have that much coins!"
+        response = f"Uh oh! {donater.mention} doesn't seem to have that much coins!"
     return response
 
 async def get_guess_response(ctx, conn, member, guess_answer, bet_amount):
@@ -171,88 +171,92 @@ async def get_guess_response(ctx, conn, member, guess_answer, bet_amount):
     last_card_games_answer = result[0][1]
     max_card_games_reaction_time = result[0][2]
 
-    query_player_coin = "SELECT coins FROM players WHERE player_id = %s"
+    query_player_coin = "SELECT coins, last_card_game_answer_time FROM players WHERE player_id = %s"
     data_player_coin = (member.id,)
     cursor.execute(query_player_coin,data_player_coin)
     result = cursor.fetchall()
-    result_list = [e[0] for e in result]
-    player_coin = result_list[0]
+    player_coin = result[0][0]
+    last_card_game_answer_time = result[0][1]
 
     if (datetime.datetime.now() < max_card_games_reaction_time):
-        if (bet_amount <= player_coin):
-            if (bet_amount > 0):
-                if (last_card_games_name == "GTC"):
-                    if (bet_amount <= 2000):
-                        if (guess_answer in ["red","black"]):
-                            if (guess_answer == last_card_games_answer):
-                                new_coins = bet_amount
+        if (datetime.datetime.now() > last_card_game_answer_time + datetime.timedelta(minutes=1)) :
+            if (bet_amount <= player_coin):
+                if (bet_amount > 0):
+                    if (last_card_games_name == "GTC"):
+                        if (bet_amount <= 2000):
+                            if (guess_answer in ["red","black"]):
+                                if (guess_answer == last_card_games_answer):
+                                    new_coins = bet_amount
+                                else:
+                                    new_coins = -bet_amount
+                                await ctx.message.add_reaction("✅")
+                                query = "UPDATE players SET coins = coins + %s, last_card_game_answer = %s, last_card_game_bet = %s,last_card_game_answer_time = current_timestamp, last_modified_at = current_timestamp WHERE player_id = %s"
+                                data = (new_coins, guess_answer, abs(new_coins),member.id)
+                                cursor.execute(query,data)
+                                conn.commit()
+                                response = f"{member.mention} has locked their answer! Good Luck!"
                             else:
-                                new_coins = -bet_amount
-                            await ctx.message.add_reaction("✅")
-                            query = "UPDATE players SET coins = coins + %s, last_card_game_answer = %s, last_card_game_bet = %s,last_card_game_answer_time = current_timestamp, last_modified_at = current_timestamp WHERE player_id = %s"
-                            data = (new_coins, guess_answer, abs(new_coins),member.id)
-                            cursor.execute(query,data)
-                            conn.commit()
-                            response = f"<@{member.id}> has locked their answer! Good Luck!"
+                                await ctx.message.add_reaction("❌")
+                                response = f"{member.mention}'s answer must be black/red"
                         else:
                             await ctx.message.add_reaction("❌")
-                            response = f"<@{member.id}>'s answer must be black/red"
-                    else:
-                        await ctx.message.add_reaction("❌")
-                        response = f"Sorry <@{member.id}>. You can only bet up to 2000"
-                elif (last_card_games_name == "PCC"):
-                    if (bet_amount <= 4000):
-                        if (guess_answer in ["spade","club","diamond","heart"]):
-                            if (guess_answer == last_card_games_answer):
-                                new_coins = bet_amount
+                            response = f"Sorry {member.mention}. You can only bet up to 2000"
+                    elif (last_card_games_name == "PCC"):
+                        if (bet_amount <= 4000):
+                            if (guess_answer in ["spade","club","diamond","heart"]):
+                                if (guess_answer == last_card_games_answer):
+                                    new_coins = bet_amount
+                                else:
+                                    new_coins = -bet_amount
+                                await ctx.message.add_reaction("✅")
+                                query = "UPDATE players SET coins = coins + %s, last_card_game_answer = %s, last_card_game_bet = %s, last_card_game_answer_time = current_timestamp, last_modified_at = current_timestamp WHERE player_id = %s"
+                                data = (new_coins, guess_answer, abs(new_coins), member.id)
+                                cursor.execute(query,data)
+                                conn.commit()
+                                response = f"{member.mention} has locked their answer! Good Luck!"
                             else:
-                                new_coins = -bet_amount
-                            await ctx.message.add_reaction("✅")
-                            query = "UPDATE players SET coins = coins + %s, last_card_game_answer = %s, last_card_game_bet = %s, last_card_game_answer_time = current_timestamp, last_modified_at = current_timestamp WHERE player_id = %s"
-                            data = (new_coins, guess_answer, abs(new_coins), member.id)
-                            cursor.execute(query,data)
-                            conn.commit()
-                            response = f"<@{member.id}> has locked their answer! Good Luck!"
+                                await ctx.message.add_reaction("❌")
+                                response = f"{member.mention}'s answer must be in spade/club/diamond/heart"
                         else:
                             await ctx.message.add_reaction("❌")
-                            response = f"<@{member.id}>'s answer must be in spade/club/diamond/heart"
-                    else:
-                        await ctx.message.add_reaction("❌")
-                        response = f"Sorry <@{member.id}>. You can only bet up to 4000"
-                elif (last_card_games_name == "ACE"):
-                    try:
-                        guess_answer = int(guess_answer)
-                    except:
-                        await ctx.message.add_reaction("❌")
-                        response = f"<@{member.id}>'s answer must be between 1 and 10"
-                    last_card_games_answer = int(last_card_games_answer)
-                    if (bet_amount <= 20000):
-                        if guess_answer in range(1,11):
-                            if (guess_answer == last_card_games_answer):
-                                new_coins = bet_amount * 3
+                            response = f"Sorry {member.mention}. You can only bet up to 4000"
+                    elif (last_card_games_name == "ACE"):
+                        try:
+                            guess_answer = int(guess_answer)
+                        except:
+                            await ctx.message.add_reaction("❌")
+                            response = f"{member.mention}'s answer must be between 1 and 10"
+                        last_card_games_answer = int(last_card_games_answer)
+                        if (bet_amount <= 20000):
+                            if guess_answer in range(1,11):
+                                if (guess_answer == last_card_games_answer):
+                                    new_coins = bet_amount * 3
+                                else:
+                                    new_coins = -bet_amount
+                                await ctx.message.add_reaction("✅")
+                                query = "UPDATE players SET coins = coins + %s, last_card_game_answer = %s, last_card_game_bet = %s, last_card_game_answer_time = current_timestamp, last_modified_at = current_timestamp WHERE player_id = %s"
+                                data = (new_coins, guess_answer, abs(bet_amount), member.id)
+                                cursor.execute(query,data)
+                                conn.commit()
+                                response = f"{member.mention} has locked their answer! Good Luck!"
                             else:
-                                new_coins = -bet_amount
-                            await ctx.message.add_reaction("✅")
-                            query = "UPDATE players SET coins = coins + %s, last_card_game_answer = %s, last_card_game_bet = %s, last_card_game_answer_time = current_timestamp, last_modified_at = current_timestamp WHERE player_id = %s"
-                            data = (new_coins, guess_answer, abs(bet_amount), member.id)
-                            cursor.execute(query,data)
-                            conn.commit()
-                            response = f"<@{member.id}> has locked their answer! Good Luck!"
+                                await ctx.message.add_reaction("❌")
+                                response = f"{member.mention}'s answer must be between 1 and 10"
                         else:
                             await ctx.message.add_reaction("❌")
-                            response = f"<@{member.id}>'s answer must be between 1 and 10"
-                    else:
-                        await ctx.message.add_reaction("❌")
-                        response = f"Sorry <@{member.id}>. You can only bet up to 20000"
+                            response = f"Sorry {member.mention}. You can only bet up to 20000"
+                else:
+                    await ctx.message.add_reaction("❌")
+                    response = f"{member.mention} can't bet with negative amount of coins!"
             else:
                 await ctx.message.add_reaction("❌")
-                response = f"<@{member.id}> can't bet with negative amount of coins!"
+                response = f"{member.mention} doesn't have enough coins to bet!"
         else:
             await ctx.message.add_reaction("❌")
-            response = f"<@{member.id}> doesn't have enough coins to bet!"
+            response = f"Uh Oh! {member.mention}, you can only guess once!"
     else:
         await ctx.message.add_reaction("❌")
-        response = f"Time's up! <@{member.id}> was late to answer"
+        response = f"Time's up! {member.mention} was late to answer"
     
     conn.commit()
     conn.close()

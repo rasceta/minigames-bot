@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS public.players (
 	next_donate_time TIMESTAMP,
 	next_donation_time TIMESTAMP,
 	next_daily_coins_time TIMESTAMP,
+	next_weekly_coins_time TIMESTAMP,
 	created_at TIMESTAMP,
 	last_modified_at TIMESTAMP
 );
