@@ -545,9 +545,7 @@ async def add_coins(ctx, member : discord.User, coins : int):
 
 @add_coins.error
 async def add_coins_eror(ctx,error):
-    if isinstance(error, commands.MissingRole):
-        await ctx.send(error)
-    else:
+    if not isinstance(error, commands.MissingRole):
         await ctx.send(f"```Sorry, You need to define @Member you want to add their coins and the coin amount. Example of proper usage:\n\n!apollo add_coins @Member 1000```")
 
 @client.command('register')
@@ -703,10 +701,10 @@ async def weekly(ctx):
             data = (free_coins, next_weekly_coins, member.id)
             cursor.execute(query, data)
             await ctx.message.add_reaction("✅")
-            await ctx.send(f"{ctx.author.mention}, thank you! You have claimed your weekly reward of {free_coins} coins! Please check again next week!")
+            await ctx.send(f"You have claimed your weekly coins, {ctx.author.mention}. Don't forget next week!")
         else:
             next_weekly_coins = next_weekly_coins - datetime.datetime.now()
-            days = int(next_weekly_coins.day)
+            days = int(next_weekly_coins.days)
             minutes = int((next_weekly_coins.seconds % 3600) / 60)
             hours = int(next_weekly_coins.seconds / 3600)
             seconds = int(next_weekly_coins.seconds % 60)
