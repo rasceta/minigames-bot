@@ -652,9 +652,9 @@ async def daily(ctx):
     if isinstance(next_daily_coins, datetime.datetime):
         if (datetime.datetime.now () > next_daily_coins):
             if discord.utils.get(member.roles, name="Giver") is not None:
-                free_coins = 10000
+                free_coins = 24000
             elif discord.utils.get(member.roles, name="Donor") is not None:
-                free_coins = 1500
+                free_coins = 3500
             elif (discord.utils.get(member.roles, name="Members") is not None) or (discord.utils.get(member.roles, name="Explorer") is not None):
                 free_coins = 400
             query = "UPDATE players SET coins = coins + %s, next_daily_coins_time = %s where player_id = %s"
@@ -719,17 +719,18 @@ async def shop(ctx):
     embed.add_field(name="**🍲Soup Kettle Token🍲**. Can be traded for a soup Kettle. Which you can then turn in the soup kettle for bells. Each soup kettle when given to a treasurer is worth 99,000 Bells", value="Price: 💰4.000", inline=False)
     embed.add_field(name="**🔴Foundation Token🔴**. Worth 1 stack of anything from the dodo code", value="Price: 💰12.000", inline=True)
     embed.add_field(name="**♥Heart Token♥**. Worth 3 stacks of anything from the dodo code", value="Price: 💰20.000")
+    embed.add_field(name="**💖Love Token💖**. By buying this token you are entitled to a 15 stacks of items randomly chosen from our 'free stuff' category!", value="Price: 💰100.000", inline=False)
     embed.add_field(name="**🎲Gambler🎲**. Purchasing this role signifies your dedication as a gambler, and not only do you have the fiery spirit of one, but you also have the coins to back it up!", value="Price: 💰20.000", inline=False)
     embed.add_field(name="**🤑Wealthy🤑**. Purchasing this role means you have an ample amount of coins at your disposal! The role is permanent and everyone can see exactly how wealthy you are.", value="Price: 💰200.000", inline=True)
     embed.add_field(name="Notes",value="If you want to turn in your items! Please use `!apollo exchange <item>, <dodo code>`. **Please be sure to open your island before turning in a token!**",inline=False)
 
     await ctx.send(embed=embed)
 
-@client.command('purchase')
+@client.command(name='purchase',aliases=['buy'])
 async def purchase(ctx, *, item : str):
     member = ctx.author
     item = item.lower()
-    item_dict = {'soup kettle token':4000, 'foundation token':12000, 'heart token':20000, 'gambler':20000, 'wealthy':200000}
+    item_dict = {'soup kettle token':4000, 'foundation token':12000, 'heart token':20000, 'love token':100000, 'gambler':20000, 'wealthy':200000}
 
     conn = await get_conn()
     cursor = conn.cursor()
@@ -764,7 +765,7 @@ async def purchase(ctx, *, item : str):
             
             if has_role is False:
                 await ctx.message.add_reaction("✅")
-                response = f"<@{member.id}> has successfully purchased `{item}` from shop!"
+                response = f"{member.mention} has successfully purchased `{item}` from shop!"
             else:
                 await ctx.message.add_reaction("❌")
                 response = f"{member.mention}, You already have the {item.title()} role!"
@@ -799,7 +800,8 @@ async def exchange(ctx, *, item : str):
             exchanged_item = splitted_words[0]
             exchanged_note = splitted_words[1]
             item = item.lower()
-            items_dict = {'soup kettle token':'99,000 Bells', 'foundation token':'1 stack of anything from the dodo code', 'heart token':'3 stacks of anything from the dodo code'}
+            items_dict = {'soup kettle token':'99,000 Bells', 'foundation token':'1 stack of anything from the dodo code', 
+                        'heart token':'3 stacks of anything from the dodo code', 'love token':'15 stacks of anything from the dodo code'}
 
             conn = await get_conn()
             cursor = conn.cursor()
@@ -823,8 +825,8 @@ async def exchange(ctx, *, item : str):
                 cursor.execute(query_item,data_item)
                 conn.commit()
                 conn.close()
-                response = f"<@{member.id}> has turned in `{exchanged_item}`, if there is anyone here, please give <@{member.id}> {items_dict[exchanged_item]}"
-                await channel.send(f"<@{member.id}> has turned in `{exchanged_item}`, if there is anyone here, please give <@{member.id}> {items_dict[exchanged_item]}\nNote: {exchanged_note}")
+                response = f"{member.mention} has turned in `{exchanged_item}`, if there is anyone here, please give {member.mention} {items_dict[exchanged_item]}"
+                await channel.send(f"{member.mention} has turned in `{exchanged_item}`, if there is anyone here, please give {member.mention} {items_dict[exchanged_item]}\nNote: {exchanged_note}")
                 await ctx.message.add_reaction("✅")
             else:
                 response = f"You don't seem to have the item in question. Perhaps try another one?"

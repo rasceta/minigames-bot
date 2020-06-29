@@ -7,7 +7,7 @@ I am here to bring you lots of fun with minigames. First, you need to register u
 - Slot machine `!apollo slot <bet amount>`
 - Random card games (every 5 minutes)
 
-I can also give you free 100 coins every 5 minutes. You just need to react quickly when my free coins message appears. Not only that, but also I can help you donate your coins to other players using `!apollo donate @Member <coins amount>`. This donation system can be used **1 hour** after you registered into the game and 5 minutes after you donated your coins to others.
+I can also give you free 200 or even 1000 coins every 5 minutes. You just need to react quickly when my free coins message appears. Not only that, but also I can help you donate your coins to other players using `!apollo donate @Member <coins amount>`. This donation system can be used **1 hour** after you registered into the game and every 2 seconds after you donated your coins to others.
 
 I also own a shop. You can see what I sell using `!apollo shop` command. There you can find useful tokens that can be exchanged with ACNH stuff.
 
@@ -17,11 +17,11 @@ Here is my full command guide:
 - Register : !apollo register
 - Inventory/Wallet : !apollo wallet/inventory/items/inv
 - Slot machine : !apollo slot <bet amount>
-- Random card games : !apollo guess <answer> <bet amount> (Only usable after random card games appears
+- Random card games : !apollo guess <answer> <bet amount> (Only usable after random card game appears)
 - Donation : !apollo donate @Member <coins amount>
 - Shop : !apollo shop
-- Purchase items from shop : !apollo purchase <item from shop>
-- Exchange items for ACNH stuff :  !apollo exchange <item> (only usable if item exist in your inventory/wallet)
+- Purchase item from shop : !apollo purchase <item>
+- Exchange item (only works if you own the item):  !apollo exchange <item>, <dodo code> (only usable if item exist in your inventory/wallet)
 ```
 '''
     return guide
