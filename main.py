@@ -921,7 +921,6 @@ async def guess_error(ctx, error):
     await ctx.message.add_reaction("❌")
     if isinstance(error, commands.CommandInvokeError):
         await ctx.send(f"Uh Oh! Looks like {ctx.author.mention} haven't registered yet. Please register using `!apollo register`")
-        await ctx.send(error)
     else:
         await ctx.send(f"```Please input your answer and bet amount clearly. Example of proper usage: !apollo guess red 100```")
 

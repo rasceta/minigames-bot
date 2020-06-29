@@ -178,6 +178,9 @@ async def get_guess_response(ctx, conn, member, guess_answer, bet_amount):
     player_coin = result[0][0]
     last_card_game_answer_time = result[0][1]
 
+    if last_card_game_answer_time == None:
+        last_card_game_answer_time = datetime.datetime.now() - datetime.timedelta(minutes=5)
+
     if (datetime.datetime.now() < max_card_games_reaction_time):
         if (datetime.datetime.now() > last_card_game_answer_time + datetime.timedelta(minutes=1)) :
             if (bet_amount <= player_coin):
