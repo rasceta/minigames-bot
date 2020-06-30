@@ -555,12 +555,12 @@ async def register(ctx):
     cursor = conn.cursor()
     try:
         query = '''INSERT INTO players (player_id, player_name, register_date, coins, next_slot_time, next_donate_time, 
-        next_donation_time, next_daily_coins_time, created_at, last_modified_at) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'''
+        next_donation_time, next_daily_coins_time, next_weekly_coins_time, created_at, last_modified_at) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'''
         next_donate_time = datetime.datetime.now() + datetime.timedelta(minutes=60)
         next_donation_time = datetime.datetime.now() + datetime.timedelta(minutes=60)
         next_slot_time = datetime.datetime.now()
         data = (player.id, player.name, datetime.datetime.now(), 1000, next_slot_time, next_donate_time, next_donation_time,
-        datetime.datetime.now(), datetime.datetime.now(), datetime.datetime.now())
+        datetime.datetime.now(), datetime.datetime.now(), datetime.datetime.now(), datetime.datetime.now())
         cursor.execute(query,data)
         conn.commit()
         conn.close()
