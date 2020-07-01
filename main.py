@@ -855,8 +855,8 @@ async def exchange(ctx, *, item : str):
             exchanged_item = splitted_words[0]
             exchanged_note = splitted_words[1]
             item = item.lower()
-            items_dict = {'soup kettle token':'99,000 Bells', 'foundation token':'1 stack of anything from the dodo code', 
-                        'heart token':'3 stacks of anything from the dodo code', 'love token':'15 stacks of anything from the dodo code'}
+            items_dict = {'soup kettle token':'99,000 Bells', 'foundation token':'1 stack of anything', 
+                        'heart token':'3 stacks of anything', 'love token':'15 stacks of anything'}
 
             conn = await get_conn()
             cursor = conn.cursor()
@@ -880,14 +880,20 @@ async def exchange(ctx, *, item : str):
                 cursor.execute(query_item,data_item)
                 conn.commit()
                 conn.close()
-                response = f"{member.mention} has turned in `{exchanged_item}`, if there is anyone here, please give {member.mention} {items_dict[exchanged_item]}"
-                await channel.send(f"{member.mention} has turned in `{exchanged_item}`, if there is anyone here, please give {member.mention} {items_dict[exchanged_item]}\nNote: {exchanged_note}")
-                await ctx.message.add_reaction("✅")
+                response = f"Alright, {member.mention}. I will let our couriers know about your exchanged token. Please wait for the delivery"
+                embed = discord.Embed(title="Apollo Token Exchange",
+                                    description=f"{member.mention} has turned in `{exchanged_item}`, if there is anyone here, please give `{items_dict[exchanged_item]}` to them\nNote: {exchanged_note}",
+                                    color=discord.Color.green())
+                embed.add_field(name="Author",value=ctx.author.mention,inline=True)
+                embed.add_field(name="Message",value=ctx.message.content)
+                embed.set_footer(text=datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S UTC"))
+                await channel.send(embed=embed)
+                await ctx.message.delete()
             else:
                 response = f"You don't seem to have the item in question. Perhaps try another one?"
                 await ctx.message.add_reaction("❌")
         else:
-            response = "```Sorry, you need to add a note for your exchange. Example of proper usage:\n\n!apollo exchange soup kettle token, my dodo code is: 123456```"
+            response = "```Sorry, you need to add a note for your exchange. Example of proper usage:\n\n!apollo exchange soup kettle token, my dodo code is: ABCDEF```"
             await ctx.message.add_reaction("❌")
     except:
         pass
@@ -900,7 +906,7 @@ async def exchange_error(ctx,error):
         await ctx.send(f"Uh Oh! Looks like {ctx.author.mention} haven't registered yet. Please register using `!apollo register`")
         await ctx.send(error)
     else:
-        await ctx.send("```Uh Oh! You need to define the item you want to exchange. Example of proper usage: \n\n!apollo exchange soup kettle token```")
+        await ctx.send("```Uh Oh! You need to define the item you want to exchange and give give your dodo code. Example of proper usage: \n\n!apollo exchange soup kettle token, my dodo code is : ABCDEF```")
 
 @client.command(name='guess',aliases=['answer'])
 async def guess(ctx, guess_answer, bet_amount):
@@ -922,7 +928,7 @@ async def guess_error(ctx, error):
     if isinstance(error, commands.CommandInvokeError):
         await ctx.send(f"Uh Oh! Looks like {ctx.author.mention} haven't registered yet. Please register using `!apollo register`")
     else:
-        await ctx.send(f"```Please input your answer and bet amount clearly. Example of proper usage: !apollo guess red 100```")
+        await ctx.send(f"```Please input your answer and bet amount clearly. Example of proper usage:\n\n !apollo guess red 100```")
 
 @client.command(name='leaderboard',aliases=['rank'])
 async def leaderboard(ctx):
