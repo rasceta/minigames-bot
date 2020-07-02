@@ -30,7 +30,6 @@ async def get_items_response(conn, member):
                 item_response = item_response + f"{i} ({items_list.count(i)})\n"
     except:
         pass
-    conn.close()
 
     embed = discord.Embed(title=f"{member.name}'s items info",
                             color=discord.Color.gold())
@@ -81,7 +80,7 @@ async def get_slot_response(ctx, conn, member, slot, stars_count, bet_amount):
                     data = (coins,next_slot_time, datetime.datetime.now(), member.id)
                     cursor.execute(query,data)
                     conn.commit()
-                    conn.close()
+                    
                     embed = discord.Embed(title="** Apollo's Slot Machine**",
                                         description="Place a bet and slot!"  )
                     embed.set_thumbnail(url="https://img.freepik.com/free-vector/slot-machine-colorful-neon-sign-machine-shape-with-triple-seven-brick-wall-background_1262-11913.jpg?size=338&ext=jpg")
@@ -262,5 +261,5 @@ async def get_guess_response(ctx, conn, member, guess_answer, bet_amount):
         response = f"Time's up! {member.mention} was late to answer"
     
     conn.commit()
-    conn.close()
+    
     return response

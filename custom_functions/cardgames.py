@@ -23,7 +23,7 @@ Please enter `!apollo guess [red/black] <bet amount>` to participate! Place your
 
 Looking forward to your answers!
 '''
-        url_img = "https://i.ibb.co/Gt3fQRx/two-back-of-cards.png"
+        url_img = "https://iili.io/Jpordb.png"
     elif game_name == "PCC":
         title = "**Pick a colored card**"
         description = '''Ohoo! Welcome! This one's a little tricky!
@@ -34,7 +34,7 @@ Please enter `!apollo guess [spade/club/diamond/heart] <bet amount>` to particip
 
 May lady luck be on your side!
 '''
-        url_img = "https://i.ibb.co/8b0Jfjr/four-back-of-cards.png"
+        url_img = "https://iili.io/Jpo6kx.png"
     elif game_name == "ACE":
         title = "**Ace in the hole**"
         description = '''The time has come! **Ace in the hole!**
@@ -44,7 +44,7 @@ Please enter `!apollo guess [1 to 10] <bet amount>` to participate! Place your b
 
 May luck be on your side! Have at it!
 '''
-        url_img = "https://i.ibb.co/P6zd7cs/ten-back-of-cards.png"
+        url_img = "https://iili.io/Jpo47j.png"
 
     return (title, description, url_img)
 

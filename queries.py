@@ -5,13 +5,8 @@ import datetime
 from dotenv import load_dotenv
 
 load_dotenv()
-async def create_tables():
+async def create_tables(conn):
 
-    conn = psycopg2.connect(user=os.getenv("DATABASE_USERNAME"),
-                            password=os.getenv("DATABASE_PASSWORD"),
-                            host=os.getenv("DATABASE_HOST"),
-                            port=os.getenv("DATABASE_PORT"),
-                            database=os.getenv("DATABASE_DB"))
     query_players = '''
 CREATE TABLE IF NOT EXISTS public.players (
 	player_id BIGINT PRIMARY KEY,
@@ -83,5 +78,4 @@ CREATE TABLE IF NOT EXISTS public.count_game (
     cursor.execute(query_servers)
     cursor.execute(query_count)
     conn.commit()
-    conn.close()
     print(f"Database created and Successfully Connected to PostgreSQL")
