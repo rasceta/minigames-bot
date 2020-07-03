@@ -552,20 +552,22 @@ async def register(ctx):
     except:
         await ctx.send(f"Uh Oh! Looks like You're already registered")
 
-@client.command(name='lastcount')
+@client.command(name='lastcount',aliases=['lc','lcount','lastc'])
 async def lastcount(ctx):
     cursor = CONN.cursor()
 
-    query_last_count = 'SELECT last_count_number, last_count_member_id FROM count_game WHERE server_id = %s'
+    query_last_count = 'SELECT last_count_number, last_count_member_id, last_count_fee FROM count_game WHERE server_id = %s'
     cursor.execute(query_last_count, (ctx.guild.id, ))
     result = cursor.fetchall()
     last_count_number = result[0][0]
     last_count_member_id = result[0][1]
+    last_count_fee = result[0][2]
 
-    embed = discord.Embed(title="Apollo's Chain Counting Game", description="Last count number info", color=discord.Color.purple())
+    embed = discord.Embed(title="Apollo's Chain Counting Game", description="Last count info", color=discord.Color.purple())
     embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717658774265004052/726063162364919818/nf67.png")
     embed.add_field(name="Member",value=f"<@{last_count_member_id}>")
     embed.add_field(name="Number",value=str(last_count_number))
+    embed.add_field(name="Fee",value=str(last_count_fee))
     await ctx.send(embed=embed)
 
 @client.command(name='slot',aliases=['slots'])
