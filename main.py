@@ -464,6 +464,21 @@ async def start_count_error(ctx,error):
     await ctx.send(response)
 
 @commands.has_permissions(administrator=True)
+@client.command('reset_count')
+async def reset_count(ctx, count_number : int, fee : int):
+    cursor = CONN.cursor()
+    try: # insert new row into count_game if not exist
+        query = "UPDATE count_game SET last_count_member_id = 1, last_count_number = %s, last_count_fee = %s, last_count_status = %s WHERE server_id = %s"
+        cursor.execute(query,(count_number, fee, "good", ctx.guild.id))
+        CONN.commit()
+        print("Updated channel count (reset_count)")
+        response = f"```You have successfully reset current chain counting game last number to {count_number} and fee to {fee}```"
+    except:
+        response = f"```You haven't set a channel as count channel```"
+    
+    await ctx.send(response)
+
+@commands.has_permissions(administrator=True)
 @client.command('stop_count')
 async def stop_count(ctx):
     cursor = CONN.cursor()
