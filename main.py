@@ -672,6 +672,7 @@ async def daily(ctx):
             next_daily_coins = datetime.datetime.now() + datetime.timedelta(days=1)
             data = (free_coins, next_daily_coins, member.id)
             cursor.execute(query, data)
+            CONN.commit()
             await ctx.message.add_reaction("✅")
             await ctx.send(f"{ctx.author.mention}, thank you! You have claimed your daily reward of {free_coins} coins! Please check again tomorrow!")
         else:
@@ -711,6 +712,7 @@ async def weekly(ctx):
             next_weekly_coins = datetime.datetime.now() + datetime.timedelta(weeks=1)
             data = (free_coins, next_weekly_coins, member.id)
             cursor.execute(query, data)
+            CONN.commit()
             await ctx.message.add_reaction("✅")
             await ctx.send(f"You have claimed your weekly coins, {ctx.author.mention}. Don't forget next week!")
         else:
