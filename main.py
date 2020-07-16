@@ -44,11 +44,11 @@ async def apollo_free_coins():
             rand_num = random.randint(1,10)
             if rand_num <= 8:
                 free_coins_amount = 200
-                img_url = "https://cdn.discordapp.com/attachments/717658774265004052/723924559446802502/coins2.png"
+                img_url = "https://media.discordapp.net/attachments/729939322664517743/733134840274223155/genericcoin.png"
                 footer_text = "React with the 👍 reaction! Quickly! I must go in 40 seconds!"
             else:
                 free_coins_amount = 1000
-                img_url = "https://cdn.discordapp.com/attachments/717658774265004052/726036484657774603/coins3.png"
+                img_url = "https://media.discordapp.net/attachments/729939322664517743/733134840274223155/genericcoin.png"
                 footer_text = "This time I'm bringing in 1,000 coins for everyone! Hurry and react with 👍!"
             embed = discord.Embed(title="Free Coins",
                                 description=f"Hello, hello! The mysterious coin creature's here. It has returned for all to see! It's here to give you all free coins! Yes! You heard that right! Free coins!")
@@ -66,7 +66,7 @@ async def apollo_free_coins():
 
     embed = discord.Embed(title="Free Coins",
                         description="I must go now! Toodle doo~ I'll be back whenever!")
-    embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717658774265004052/723924559446802502/coins2.png")
+    embed.set_thumbnail(url="https://media.discordapp.net/attachments/729939322664517743/733134840274223155/genericcoin.png")
     embed.set_footer(text="In the meantime! Please check out #community features!")
     await asyncio.sleep(40)
     for channel in client.get_all_channels():
@@ -769,9 +769,9 @@ async def donate(ctx, member : discord.User, donation_amount : int):
 @donate.error
 async def donate_error(ctx,error):
     if isinstance(error, commands.CommandInvokeError):
-        await ctx.send(f"Uh Oh! Looks like {ctx.author.mention} haven't registered yet. Please register using `!apollo register`")
+        await ctx.send(f"Uh Oh! Looks like you or the recipient haven't registered yet. Please register using `!apollo register`")
     else:
-        await ctx.send(f"```Please type @member you want to donate and donation amount clearly. Example of proper usage:\n\n!apollo donate @Member 1000```")
+        await ctx.send(f"```Please mention the person you want to donate and donation amount clearly. Example of proper usage:\n\n!apollo donate @Member 1000```")
 
 @client.command('shop')
 async def shop(ctx):
@@ -911,14 +911,13 @@ async def exchange_error(ctx,error):
         await ctx.send(f"Uh Oh! Looks like {ctx.author.mention} haven't registered yet. Please register using `!apollo register`")
         await ctx.send(error)
     else:
-        await ctx.send("```Uh Oh! You need to define the item you want to exchange and give give your dodo code. Example of proper usage: \n\n!apollo exchange soup kettle token, my dodo code is : ABCDEF```")
+        await ctx.send("```You need to define the item you want to exchange and give your dodo code (separated by comma). Example of proper usage: \n\n!apollo exchange soup kettle token, my dodo code is : ABCDEF```")
 
 @client.command(name='guess',aliases=['answer'])
 async def guess(ctx, guess_answer, bet_amount):
     member = ctx.author
     bet_amount = int(bet_amount)
 
-    
     if bet_amount >= 0:
         response = await get_guess_response(ctx,CONN,member,guess_answer,bet_amount)
     else:
@@ -932,7 +931,7 @@ async def guess_error(ctx, error):
     if isinstance(error, commands.CommandInvokeError):
         await ctx.send(f"Uh Oh! Looks like {ctx.author.mention} haven't registered yet. Please register using `!apollo register`")
     else:
-        await ctx.send(f"```Please input your answer and bet amount clearly. Example of proper usage:\n\n !apollo guess red 100```")
+        await ctx.send(f"```Please input your answer and bet amount clearly. Example of proper usage:\n\n!apollo guess red 100```")
 
 @client.command(name='leaderboard',aliases=['rank'])
 async def leaderboard(ctx):
@@ -957,7 +956,7 @@ async def leaderboard(ctx):
     
     embed = discord.Embed(title="**Apollo Games Leaderboard**", color=discord.Color.blue(),
                           description=response)
-    embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717658774265004052/723924559446802502/coins2.png")
+    embed.set_thumbnail(url="https://cdn2.iconfinder.com/data/icons/flat-game-ui-buttons-icons-1/512/19-512.png")
 
     await ctx.send(f"Here you go {ctx.author.mention}!")
     await ctx.send(embed=embed)

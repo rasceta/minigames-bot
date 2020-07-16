@@ -33,7 +33,7 @@ async def get_items_response(conn, member):
 
     embed = discord.Embed(title=f"{member.name}'s items info",
                             color=discord.Color.gold())
-    embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717658774265004052/723924559446802502/coins2.png")
+    embed.set_thumbnail(url="https://media.discordapp.net/attachments/729939322664517743/733134840274223155/genericcoin.png")
     embed.add_field(name="Name", value=member.name, inline=False)
     embed.add_field(name="💰Coins", value=player_coin, inline=False)
     embed.add_field(name="🎒Items", value=item_response, inline=False)
@@ -124,7 +124,7 @@ async def get_donate_response(ctx, conn, donater, member, donation_amount):
     next_donation_time = donation_time[0]
 
     if donation_amount <= player_coin:
-        if (donation_amount <= 50000):
+        if (donation_amount <= 100000):
             if (datetime.datetime.now() > next_donate_time):
                 if (datetime.datetime.now() > next_donation_time):
                     query_donater = "UPDATE players SET coins = coins - %s, next_donate_time = %s, last_modified_at = %s where player_id = %s"
@@ -154,7 +154,7 @@ async def get_donate_response(ctx, conn, donater, member, donation_amount):
                 response = f"Donation failed. {donater.mention} will be able to donate in {hours} hour(s) {minutes} minute(s) and {seconds} second(s)"
         else:
             await ctx.message.add_reaction("❌")
-            response = f"Uh oh! {donater.mention} cannot donate more than 50.000 coins!"
+            response = f"Uh oh! {donater.mention} cannot donate more than 100,000 coins!"
     else:
         await ctx.message.add_reaction("❌")
         response = f"Uh oh! {donater.mention} doesn't seem to have that much coins!"
